@@ -15,10 +15,8 @@ class ManufacturerForm
             ->components([
                 TextInput::make('name')
                     ->required(),
-                TextInput::make('cnpj')
+                TextInput::make('slug')
                     ->required()
-                    ->numeric()
-                    ->length(14)
                     ->unique(ignoreRecord: true),
                 FileUpload::make('logo')
                     ->image()

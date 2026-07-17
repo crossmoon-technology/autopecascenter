@@ -21,7 +21,7 @@ class ManufacturersTable
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('cnpj')
+                TextColumn::make('slug')
                     ->searchable(),
                 ImageColumn::make('logo')
                     ->disk('public'),

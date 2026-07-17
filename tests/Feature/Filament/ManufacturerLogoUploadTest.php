@@ -21,7 +21,7 @@ class ManufacturerLogoUploadTest extends TestCase
         Livewire::test(CreateManufacturer::class)
             ->fillForm([
                 'name' => 'Cofap',
-                'cnpj' => '12345678000199',
+                'slug' => 'cofap',
                 'logo' => UploadedFile::fake()->image('logo.png', 100, 100)->size(500),
                 'is_active' => true,
             ])
@@ -36,7 +36,7 @@ class ManufacturerLogoUploadTest extends TestCase
         Livewire::test(CreateManufacturer::class)
             ->fillForm([
                 'name' => 'Bosch',
-                'cnpj' => '98765432000188',
+                'slug' => 'bosch',
                 'logo' => UploadedFile::fake()->image('logo.jpg', 100, 100)->size(500),
                 'is_active' => true,
             ])
@@ -51,7 +51,7 @@ class ManufacturerLogoUploadTest extends TestCase
         Livewire::test(CreateManufacturer::class)
             ->fillForm([
                 'name' => 'Nakata',
-                'cnpj' => '11122233000144',
+                'slug' => 'nakata',
                 'logo' => UploadedFile::fake()->create('logo.png', 3000, 'image/png'),
                 'is_active' => true,
             ])

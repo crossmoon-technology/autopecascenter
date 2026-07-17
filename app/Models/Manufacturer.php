@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'cnpj', 'logo', 'icon', 'external_link', 'is_active'])]
+#[Fillable(['name', 'slug', 'logo', 'icon', 'external_link', 'is_active'])]
 class Manufacturer extends Model
 {
     use SoftDeletes;
