@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Catalogs\CatalogResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -33,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->resources([
                 ManufacturerResource::class,
+                CatalogResource::class,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
