@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Manufacturers\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
 class ManufacturerForm
 {
@@ -14,7 +16,13 @@ class ManufacturerForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (string $operation, Set $set, ?string $state) {
+                        if ($operation === 'create') {
+                            $set('slug', Str::slug($state));
+                        }
+                    }),
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
