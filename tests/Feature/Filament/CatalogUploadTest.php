@@ -15,7 +15,7 @@ class CatalogUploadTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_accepts_a_json_catalog_file(): void
+    public function test_accepts_a_jsonl_catalog_file(): void
     {
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
         $manufacturer = Manufacturer::factory()->create();
@@ -24,7 +24,7 @@ class CatalogUploadTest extends TestCase
             ->fillForm([
                 'manufacturer_id' => $manufacturer->getKey(),
                 'name' => 'Catálogo 2026',
-                'file' => UploadedFile::fake()->createWithContent('catalog.json', '{"parts": []}'),
+                'file' => UploadedFile::fake()->createWithContent('catalog.jsonl', "{\"code\":\"A1\"}\n{\"code\":\"A2\"}\n"),
                 'extracted_at' => '2026-07-01',
                 'is_active' => true,
             ])
@@ -32,7 +32,7 @@ class CatalogUploadTest extends TestCase
             ->assertHasNoFormErrors();
     }
 
-    public function test_rejects_a_non_json_catalog_file(): void
+    public function test_rejects_a_non_jsonl_catalog_file(): void
     {
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
         $manufacturer = Manufacturer::factory()->create();
@@ -41,7 +41,7 @@ class CatalogUploadTest extends TestCase
             ->fillForm([
                 'manufacturer_id' => $manufacturer->getKey(),
                 'name' => 'Catálogo inválido',
-                'file' => UploadedFile::fake()->create('catalog.csv', 10, 'text/csv'),
+                'file' => UploadedFile::fake()->createWithContent('catalog.json', '{"code":"A1"}'),
                 'extracted_at' => '2026-07-01',
                 'is_active' => true,
             ])

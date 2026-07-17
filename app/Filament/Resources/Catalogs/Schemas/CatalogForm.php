@@ -22,7 +22,7 @@ class CatalogForm
                     ->required(),
                 FileUpload::make('file')
                     ->required()
-                    ->acceptedFileTypes(['application/json'])
+                    ->rules(['extensions:jsonl'])
                     ->directory('catalogs'),
                 DatePicker::make('extracted_at')
                     ->required(),
