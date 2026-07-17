@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Operation;
 
 class CatalogForm
 {
@@ -27,7 +28,9 @@ class CatalogForm
                 DatePicker::make('extracted_at')
                     ->required(),
                 Toggle::make('is_active')
-                    ->required(),
+                    ->required()
+                    ->disabledOn(Operation::Create)
+                    ->helperText('Só pode ser ativado depois que a importação for executada.'),
             ]);
     }
 }
