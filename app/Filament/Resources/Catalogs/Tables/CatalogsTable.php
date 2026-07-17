@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Catalogs\Tables;
 
+use App\Jobs\ImportCatalogParts;
 use App\Models\Catalog;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -9,6 +10,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -59,8 +61,15 @@ class CatalogsTable
                 Action::make('import')
                     ->label('Importar')
                     ->icon(Heroicon::OutlinedArrowUpTray)
+                    ->requiresConfirmation()
                     ->action(function (Catalog $record) {
-                        // TODO: implement the actual catalog import.
+                        ImportCatalogParts::dispatch($record);
+
+                        Notification::make()
+                            ->title('Importação iniciada')
+                            ->body('As peças serão processadas em segundo plano.')
+                            ->success()
+                            ->send();
                     }),
                 EditAction::make(),
             ])
