@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Manufacturers\Schemas;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class ManufacturerForm
@@ -21,6 +22,8 @@ class ManufacturerForm
                 TextInput::make('logo'),
                 TextInput::make('icon'),
                 TextInput::make('external_link'),
+                Toggle::make('is_active')
+                    ->required(),
             ]);
     }
 }
