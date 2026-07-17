@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -22,10 +23,10 @@ class ManufacturersTable
                     ->searchable(),
                 TextColumn::make('cnpj')
                     ->searchable(),
-                TextColumn::make('logo')
-                    ->searchable(),
-                TextColumn::make('icon')
-                    ->searchable(),
+                ImageColumn::make('logo')
+                    ->disk('public'),
+                ImageColumn::make('icon')
+                    ->disk('public'),
                 TextColumn::make('external_link')
                     ->searchable(),
                 IconColumn::make('is_active')
