@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\Role;
 use App\Mail\Auth\ResetPasswordMail;
 use database\factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\Mail;
 
 #[Fillable(['role', 'name', 'email', 'document', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
@@ -27,6 +29,16 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'role'              => Role::class,
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return match ($panel->getId()) {
+            'super-admin' => $this->role === Role::SuperAdmin,
+            'admin'       => $this->role === Role::Admin,
+            'client'      => $this->role === Role::Client,
+            default       => false,
+        };
     }
 
     public function sendPasswordResetNotification($token): void
