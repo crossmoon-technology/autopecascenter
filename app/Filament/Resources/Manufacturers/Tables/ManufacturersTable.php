@@ -20,29 +20,38 @@ class ManufacturersTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->alignCenter(),
                 TextColumn::make('slug')
-                    ->searchable(),
+                    ->searchable()
+                    ->alignCenter(),
                 ImageColumn::make('logo')
-                    ->disk('public'),
+                    ->disk('public')
+                    ->alignCenter(),
                 ImageColumn::make('icon')
-                    ->disk('public'),
+                    ->disk('public')
+                    ->alignCenter(),
                 TextColumn::make('external_link')
-                    ->searchable(),
+                    ->searchable()
+                    ->alignCenter(),
                 IconColumn::make('is_active')
-                    ->boolean(),
+                    ->boolean()
+                    ->alignCenter(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignCenter(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignCenter(),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignCenter(),
             ])
             ->filters([
                 TrashedFilter::make(),

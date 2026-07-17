@@ -24,28 +24,36 @@ class CatalogsTable
             ->columns([
                 ImageColumn::make('manufacturer.icon')
                     ->disk('public')
-                    ->label('Fabricante'),
+                    ->label('Fabricante')
+                    ->alignCenter(),
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->alignCenter(),
                 TextColumn::make('file')
-                    ->searchable(),
+                    ->searchable()
+                    ->alignCenter(),
                 TextColumn::make('extracted_at')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->alignCenter(),
                 IconColumn::make('is_active')
-                    ->boolean(),
+                    ->boolean()
+                    ->alignCenter(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignCenter(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignCenter(),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignCenter(),
             ])
             ->filters([
                 TrashedFilter::make(),
