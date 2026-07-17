@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\AuthController\Exceptions\InvalidCredentialsException;
 use App\Http\Controllers\AuthController\Exceptions\InvalidResetTokenException;
 use App\Http\Controllers\AuthController\Exceptions\ResetLinkException;
+use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -12,6 +13,7 @@ use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
@@ -34,7 +36,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(FilamentAuthenticate::panelUrlForRole(Auth::user()->role));
     }
 
     public function showRegister(): View
