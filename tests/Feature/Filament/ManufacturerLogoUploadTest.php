@@ -29,7 +29,22 @@ class ManufacturerLogoUploadTest extends TestCase
             ->assertHasNoFormErrors();
     }
 
-    public function test_rejects_a_non_png_logo(): void
+    public function test_accepts_an_svg_logo(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CreateManufacturer::class)
+            ->fillForm([
+                'name' => 'Fras-le',
+                'slug' => 'fras-le',
+                'logo' => UploadedFile::fake()->create('logo.svg', 200, 'image/svg+xml'),
+                'is_active' => true,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+    }
+
+    public function test_rejects_an_unsupported_logo_type(): void
     {
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 

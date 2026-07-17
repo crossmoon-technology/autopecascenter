@@ -29,13 +29,13 @@ class ManufacturerForm
                 FileUpload::make('logo')
                     ->image()
                     ->disk('public')
-                    ->acceptedFileTypes(['image/png'])
+                    ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                     ->maxSize(2048)
                     ->directory('manufacturers/logos'),
                 FileUpload::make('icon')
                     ->image()
                     ->disk('public')
-                    ->acceptedFileTypes(['image/png'])
+                    ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                     ->maxSize(2048)
                     ->directory('manufacturers/icons'),
                 TextInput::make('external_link'),
