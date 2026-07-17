@@ -1,0 +1,15 @@
+@use 'views/auth/login.scss';
+@use 'views/auth/forgot-password.scss';
+@use 'views/auth/register.scss';
+@use 'settings/container.scss';
+@use 'settings/grid.scss';
+@use 'settings/colors.scss';
+@use 'settings/typography.scss';
+
+* {
+    padding: 0;
+    margin: 0;
+    text-decoration: none;
+    list-style: none;
+    box-sizing: border-box;
+}
