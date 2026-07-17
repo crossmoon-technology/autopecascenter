@@ -20,7 +20,9 @@ class CatalogResource extends Resource
 {
     protected static ?string $model = Catalog::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BookOpen;
 
     public static function form(Schema $schema): Schema
     {

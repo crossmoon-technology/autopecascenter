@@ -14,6 +14,8 @@ class Manufacturers extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
 
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BuildingStorefront;
+
     protected static ?string $navigationLabel = 'Fabricantes';
 
     protected static ?string $title = 'Fabricantes';

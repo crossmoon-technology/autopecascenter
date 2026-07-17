@@ -20,7 +20,9 @@ class ManufacturerResource extends Resource
 {
     protected static ?string $model = Manufacturer::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BuildingOffice2;
 
     public static function form(Schema $schema): Schema
     {
