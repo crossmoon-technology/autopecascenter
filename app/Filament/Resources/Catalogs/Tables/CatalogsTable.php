@@ -28,10 +28,7 @@ class CatalogsTable
                     ->alignCenter(),
                 TextColumn::make('name')
                     ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('file')
-                    ->searchable()
-                    ->alignCenter(),
+                    ->alignLeft(),
                 TextColumn::make('extracted_at')
                     ->date()
                     ->sortable()
