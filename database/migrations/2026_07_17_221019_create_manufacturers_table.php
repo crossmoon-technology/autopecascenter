@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('manufacturers', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->char('cnpj', 14)->unique();
             $table->string('logo')->nullable();
             $table->string('icon')->nullable();
             $table->string('external_link')->nullable();
-            $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
         });
