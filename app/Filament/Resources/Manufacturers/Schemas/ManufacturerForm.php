@@ -38,7 +38,9 @@ class ManufacturerForm
                     ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                     ->maxSize(2048)
                     ->directory('manufacturers/icons'),
-                TextInput::make('external_link'),
+                TextInput::make('external_link')
+                    ->url()
+                    ->nullable(),
                 Toggle::make('is_active')
                     ->required(),
             ]);
