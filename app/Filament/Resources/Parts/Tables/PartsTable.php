@@ -15,7 +15,7 @@ class PartsTable
     {
         return $table
             ->columns([
-                ImageColumn::make('catalog.manufacturer.icon')
+                ImageColumn::make('catalog.manufacturer.logo')
                     ->disk('public')
                     ->label('Fabricante')
                     ->alignCenter(),

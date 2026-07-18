@@ -24,7 +24,7 @@ class CatalogsTable
     {
         return $table
             ->columns([
-                ImageColumn::make('manufacturer.icon')
+                ImageColumn::make('manufacturer.logo')
                     ->disk('public')
                     ->label('Fabricante')
                     ->alignCenter(),
