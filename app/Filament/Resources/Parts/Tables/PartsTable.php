@@ -26,13 +26,7 @@ class PartsTable
                 TextColumn::make('codigo')
                     ->searchable()
                     ->alignCenter(),
-                TextColumn::make('descricao')
-                    ->searchable()
-                    ->alignCenter(),
                 TextColumn::make('tipo')
-                    ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('posicao')
                     ->searchable()
                     ->alignCenter(),
                 TextColumn::make('categoria')
