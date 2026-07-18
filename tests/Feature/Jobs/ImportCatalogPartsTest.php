@@ -4,6 +4,7 @@ namespace Tests\Feature\Jobs;
 
 use App\Jobs\ImportCatalogParts;
 use App\Models\Catalog;
+use App\Models\Catalog\Enums\ImportStatus;
 use App\Models\Part;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -49,7 +50,9 @@ class ImportCatalogPartsTest extends TestCase
         $this->assertSame(['GS440'], $part->conversoes['MONROE']);
         $this->assertSame(['MG 16214', 'MG 16215'], $part->conversoes['NAKATA']);
 
-        $this->assertTrue($catalog->refresh()->is_active);
+        $catalog->refresh();
+        $this->assertTrue($catalog->is_active);
+        $this->assertSame(ImportStatus::Imported, $catalog->import_status);
     }
 
     public function test_reimporting_updates_existing_parts_instead_of_duplicating(): void
@@ -80,6 +83,8 @@ class ImportCatalogPartsTest extends TestCase
 
         ImportCatalogParts::dispatchSync($catalog);
 
-        $this->assertFalse($catalog->refresh()->is_active);
+        $catalog->refresh();
+        $this->assertFalse($catalog->is_active);
+        $this->assertSame(ImportStatus::NotImported, $catalog->import_status);
     }
 }

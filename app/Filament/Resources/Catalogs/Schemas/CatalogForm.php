@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Catalogs\Schemas;
 
+use App\Rules\ValidJsonl;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -23,7 +24,7 @@ class CatalogForm
                     ->required(),
                 FileUpload::make('file')
                     ->required()
-                    ->rules(['extensions:jsonl'])
+                    ->rules(['extensions:jsonl', new ValidJsonl])
                     ->directory('catalogs'),
                 DatePicker::make('extracted_at')
                     ->required(),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Catalog\Enums\ImportStatus;
 use database\factories\CatalogFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ class Catalog extends Model
         return [
             'extracted_at' => 'date',
             'is_active' => 'boolean',
+            'import_status' => ImportStatus::class,
         ];
     }
 
