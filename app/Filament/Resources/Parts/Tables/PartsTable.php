@@ -17,7 +17,7 @@ class PartsTable
             ->columns([
                 ImageColumn::make('catalog.manufacturer.logo')
                     ->disk('public')
-                    ->imageHeight(24)
+                    ->imageHeight(22)
                     ->label('Fabricante')
                     ->alignCenter(),
                 TextColumn::make('catalog.name')
