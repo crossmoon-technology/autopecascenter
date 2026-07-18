@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\PartEquivalenceSearch;
 use App\Filament\Resources\Catalogs\CatalogResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
@@ -41,6 +42,7 @@ class SuperAdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/SuperAdmin/Pages'), for: 'App\Filament\SuperAdmin\Pages')
             ->pages([
                 Dashboard::class,
+                PartEquivalenceSearch::class,
             ])
             ->discoverWidgets(in: app_path('Filament/SuperAdmin/Widgets'), for: 'App\Filament\SuperAdmin\Widgets')
             ->widgets([
