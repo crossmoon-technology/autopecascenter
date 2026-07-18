@@ -26,7 +26,7 @@ class CatalogsTable
             ->columns([
                 ImageColumn::make('manufacturer.logo')
                     ->disk('public')
-                    ->imageHeight(22)
+                    ->imageHeight(15)
                     ->label('Fabricante')
                     ->alignCenter(),
                 TextColumn::make('name')
