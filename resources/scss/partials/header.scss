@@ -1,10 +1,11 @@
 @use "../settings/colors";
 @use "../settings/typography";
 @use "../settings/grid";
+@use "./Header/variables.scss";
 
 body > header.header {
     background-color: colors.$color-header-bg;
-    height: 100px;
+    height: variables.$height-header;
 
     .container {
         height: 100%;
