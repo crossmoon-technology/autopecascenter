@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Resources\Catalogs\CatalogResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
+use App\Filament\Resources\Parts\PartResource;
 use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,6 +35,7 @@ class SuperAdminPanelProvider extends PanelProvider
             ->resources([
                 ManufacturerResource::class,
                 CatalogResource::class,
+                PartResource::class,
             ])
             ->discoverResources(in: app_path('Filament/SuperAdmin/Resources'), for: 'App\Filament\SuperAdmin\Resources')
             ->discoverPages(in: app_path('Filament/SuperAdmin/Pages'), for: 'App\Filament\SuperAdmin\Pages')
