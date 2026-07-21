@@ -1,38 +1,37 @@
 <?php
 
-namespace App\Filament\Resources\Manufacturers\Tables;
+namespace App\Filament\Resources\Catalogs\Tables;
 
+use App\Models\Catalog;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class ManufacturersTable
+class CatalogsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
+                ImageColumn::make('manufacturer.icon')
+                    ->disk('public')
+                    ->label('Fabricante')
+                    ->alignCenter(),
                 TextColumn::make('name')
                     ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('slug')
-                    ->searchable()
-                    ->alignCenter(),
-                ImageColumn::make('logo')
-                    ->disk('public')
-                    ->alignCenter(),
-                ImageColumn::make('icon')
-                    ->disk('public')
-                    ->alignCenter(),
-                TextColumn::make('external_link')
-                    ->searchable()
+                    ->alignLeft(),
+                TextColumn::make('extracted_at')
+                    ->date()
+                    ->sortable()
                     ->alignCenter(),
                 IconColumn::make('is_active')
                     ->boolean()
@@ -57,6 +56,12 @@ class ManufacturersTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
+                Action::make('import')
+                    ->label('Importar')
+                    ->icon(Heroicon::OutlinedArrowUpTray)
+                    ->action(function (Catalog $record) {
+                        // TODO: implement the actual catalog import.
+                    }),
                 EditAction::make(),
             ])
             ->toolbarActions([

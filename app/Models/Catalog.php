@@ -2,28 +2,29 @@
 
 namespace App\Models;
 
-use database\factories\ManufacturerFactory;
+use database\factories\CatalogFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'slug', 'logo', 'icon', 'external_link', 'is_active'])]
-class Manufacturer extends Model
+#[Fillable(['manufacturer_id', 'name', 'file', 'extracted_at', 'is_active'])]
+class Catalog extends Model
 {
-    /** @use HasFactory<ManufacturerFactory> */
+    /** @use HasFactory<CatalogFactory> */
     use HasFactory, SoftDeletes;
 
     protected function casts(): array
     {
         return [
+            'extracted_at' => 'date',
             'is_active' => 'boolean',
         ];
     }
 
-    public function catalogs(): HasMany
+    public function manufacturer(): BelongsTo
     {
-        return $this->hasMany(Catalog::class);
+        return $this->belongsTo(Manufacturer::class);
     }
 }
