@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(FilamentAuthenticate::panelUrlForRole(Auth::user()->role));
+        return redirect()->to(FilamentAuthenticate::panelUrlForRole(Auth::user()->role));
     }
 
     public function showRegister(): View
