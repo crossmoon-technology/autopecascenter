@@ -1,6 +1,9 @@
 @use 'views/auth/login.scss';
 @use 'views/auth/forgot-password.scss';
 @use 'views/auth/register.scss';
+@use 'views/home.scss';
+@use 'partials/header.scss';
+@use 'partials/footer.scss';
 @use 'settings/container.scss';
 @use 'settings/grid.scss';
 @use 'settings/colors.scss';
