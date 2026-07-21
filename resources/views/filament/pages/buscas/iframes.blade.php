@@ -144,6 +144,46 @@
             font-size: 0.875rem;
             opacity: 0.65;
         }
+
+        /* Como o conteúdo do iframe é opaco pra gente, não dá pra "capturar" um resultado
+           — em vez disso, um input simples deixa o usuário digitar o código e adicioná-lo
+           manualmente à cotação em aberto. */
+        .if-add-quotation {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .if-add-quotation-input {
+            flex: 1;
+            max-width: 20rem;
+            padding: 0.4375rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(127, 127, 127, 0.3);
+            background: transparent;
+            color: inherit;
+            font-size: 0.8125rem;
+        }
+        .if-add-quotation-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4375rem 0.875rem;
+            border-radius: 0.5rem;
+            border: none;
+            background-color: rgb(37 99 235);
+            color: #fff;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .if-add-quotation-btn:hover {
+            background-color: rgb(29 78 216);
+        }
+        .if-add-quotation-btn svg {
+            width: 0.875rem;
+            height: 0.875rem;
+        }
     </style>
 
     @php
@@ -240,6 +280,24 @@
                         x-show="activeTab === {{ $manufacturer->id }} && manufacturers[{{ $manufacturer->id }}]"
                         x-cloak
                     >
+                        <div class="if-add-quotation" x-data="{ codigo: '' }">
+                            <input
+                                type="text"
+                                x-model="codigo"
+                                placeholder="Código da peça em {{ $manufacturer->name }}"
+                                class="if-add-quotation-input"
+                                x-on:keydown.enter="$wire.addToQuotation({{ $manufacturer->id }}, codigo); codigo = ''"
+                            >
+                            <button
+                                type="button"
+                                class="if-add-quotation-btn"
+                                x-on:click="$wire.addToQuotation({{ $manufacturer->id }}, codigo); codigo = ''"
+                            >
+                                <x-filament::icon icon="heroicon-o-shopping-cart" />
+                                Adicionar à cotação
+                            </button>
+                        </div>
+
                         <iframe
                             wire:ignore
                             src="{{ $manufacturer->iframe_url }}"

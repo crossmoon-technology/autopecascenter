@@ -5,6 +5,7 @@ namespace Tests\Feature\Filament;
 use App\Enums\Role;
 use App\Filament\Pages\Buscas\Iframes;
 use App\Models\Manufacturer;
+use App\Models\QuotationItem\Enums\Source;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -66,6 +67,35 @@ class IframesPageTest extends TestCase
             ->assertSet("manufacturers.{$b->id}", true);
     }
 
+    public function test_only_shows_chips_for_the_users_enabled_manufacturers(): void
+    {
+        $enabled = Manufacturer::factory()->create(['name' => 'Habilitado', 'is_active' => true, 'iframe_url' => 'https://a.example.com']);
+        $disabled = Manufacturer::factory()->create(['name' => 'Desabilitado', 'is_active' => true, 'iframe_url' => 'https://b.example.com']);
+
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $user->preferredManufacturers()->attach($enabled);
+        $this->actingAs($user);
+
+        Livewire::test(Iframes::class)
+            ->assertSee('Habilitado')
+            ->assertDontSee('Desabilitado')
+            ->assertSet("manufacturers.{$enabled->id}", true)
+            ->assertSet("manufacturers.{$disabled->id}", null);
+    }
+
+    public function test_falls_back_to_every_eligible_manufacturer_when_the_preference_does_not_apply_here(): void
+    {
+        $unrelatedPreference = Manufacturer::factory()->create(['is_active' => true, 'iframe_url' => null]);
+        $eligible = Manufacturer::factory()->create(['is_active' => true, 'iframe_url' => 'https://a.example.com']);
+
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $user->preferredManufacturers()->attach($unrelatedPreference);
+        $this->actingAs($user);
+
+        Livewire::test(Iframes::class)
+            ->assertSet("manufacturers.{$eligible->id}", true);
+    }
+
     public function test_deselecting_a_manufacturer_only_affects_its_own_entry(): void
     {
         $a = Manufacturer::factory()->create(['is_active' => true, 'iframe_url' => 'https://a.example.com']);
@@ -76,5 +106,35 @@ class IframesPageTest extends TestCase
             ->set("manufacturers.{$a->id}", false)
             ->assertSet("manufacturers.{$a->id}", false)
             ->assertSet("manufacturers.{$b->id}", true);
+    }
+
+    public function test_add_to_quotation_creates_an_open_quotation_with_the_manually_typed_code(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'iframe_url' => 'https://a.example.com']);
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $this->actingAs($user);
+
+        Livewire::test(Iframes::class)
+            ->call('addToQuotation', $manufacturer->id, 'HF-21')
+            ->assertNotified();
+
+        $this->assertDatabaseHas('quotation_items', [
+            'part_id' => null,
+            'manufacturer_id' => $manufacturer->id,
+            'source' => Source::Iframe->value,
+            'codigo' => 'HF-21',
+        ]);
+    }
+
+    public function test_add_to_quotation_requires_a_non_blank_code(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'iframe_url' => 'https://a.example.com']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(Iframes::class)
+            ->call('addToQuotation', $manufacturer->id, '   ')
+            ->assertNotified();
+
+        $this->assertDatabaseCount('quotation_items', 0);
     }
 }

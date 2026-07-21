@@ -28,6 +28,12 @@
                 </div>
             @endif
 
+            @error('registration_ip')
+                <div class="register-alert register-alert--error">
+                    {{ $message }}
+                </div>
+            @enderror
+
             <form method="POST" action="{{ route('register.attempt') }}" class="register-form" novalidate>
                 @csrf
 

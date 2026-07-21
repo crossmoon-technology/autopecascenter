@@ -241,6 +241,49 @@
         .ps-card-link:hover {
             text-decoration: underline;
         }
+
+        .ps-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-top: 0.375rem;
+        }
+        .ps-card-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            width: 1.75rem;
+            height: 1.75rem;
+            flex-shrink: 0;
+            border-radius: 0.375rem;
+            border: 1px solid rgba(127, 127, 127, 0.25);
+            background: transparent;
+            color: inherit;
+            opacity: 0.65;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.15s ease, border-color 0.15s ease;
+        }
+        .ps-card-action-btn:hover {
+            opacity: 1;
+            border-color: rgb(37 99 235);
+        }
+        .ps-card-action-btn svg {
+            width: 0.875rem;
+            height: 0.875rem;
+        }
+        .ps-card-action-copied {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: rgb(21 128 61);
+        }
+        .ps-card-action-btn-quoted {
+            opacity: 1;
+            border-color: rgb(34 197 94);
+            background: rgba(34, 197, 94, 0.12);
+            color: rgb(21 128 61);
+        }
     </style>
 
     @php
@@ -270,6 +313,12 @@
                     }
                 },
             }"
+            x-on:keydown.window="
+                if ($event.key === '/' && ! ['INPUT', 'TEXTAREA', 'SELECT'].includes($event.target.tagName)) {
+                    $event.preventDefault();
+                    document.getElementById('busca-termo-input')?.focus();
+                }
+            "
         >
             <x-filament::section>
                 <x-slot name="heading">Fabricantes</x-slot>
@@ -417,7 +466,11 @@
                             <div class="ps-tab-panel-scroll">
                                 <div class="ps-grid">
                                     @foreach ($items as $item)
-                                        <div class="ps-card">
+                                        @php $itemShareUrl = $this->itemShareUrl($item->codigo); @endphp
+
+                                        @php $isQuoted = in_array("{$manufacturer->id}|{$item->codigo}", $quotedApiKeys, true); @endphp
+
+                                        <div class="ps-card" wire:key="ps-item-{{ $manufacturer->id }}-{{ $loop->index }}">
                                             @if ($item->imagem_url)
                                                 <span class="ps-card-image">
                                                     <img src="{{ $item->imagem_url }}" alt="" loading="lazy">
@@ -435,6 +488,41 @@
                                                 @if ($item->product_url)
                                                     <a href="{{ $item->product_url }}" target="_blank" rel="noopener" class="ps-card-link">Ver no site &rarr;</a>
                                                 @endif
+
+                                                <div class="ps-card-actions" x-data="{ copied: false }">
+                                                    <button
+                                                        type="button"
+                                                        wire:click="addToQuotation({{ $manufacturer->id }}, @js($item->codigo), @js($item->descricao))"
+                                                        class="ps-card-action-btn {{ $isQuoted ? 'ps-card-action-btn-quoted' : '' }}"
+                                                        title="{{ $isQuoted ? 'Remover da cotação' : 'Adicionar à cotação' }}"
+                                                    >
+                                                        <x-filament::icon icon="heroicon-o-shopping-cart" />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        class="ps-card-action-btn"
+                                                        title="Copiar link"
+                                                        x-on:click="navigator.clipboard.writeText('{{ $itemShareUrl }}'); copied = true; setTimeout(() => copied = false, 1500)"
+                                                    >
+                                                        <x-filament::icon icon="heroicon-o-link" />
+                                                    </button>
+
+                                                    <a
+                                                        href="https://wa.me/?text={{ urlencode('Peça '.$item->codigo.': '.$itemShareUrl) }}"
+                                                        target="_blank"
+                                                        rel="noopener"
+                                                        class="ps-card-action-btn"
+                                                        title="Compartilhar no WhatsApp"
+                                                    >
+                                                        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.288.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                                            <path d="M12.004 2c-5.514 0-9.99 4.476-9.99 9.99 0 1.76.464 3.484 1.346 5.001L2 22l5.135-1.342a9.96 9.96 0 0 0 4.869 1.242h.004c5.514 0 9.99-4.476 9.99-9.99 0-2.669-1.04-5.176-2.928-7.062A9.935 9.935 0 0 0 12.004 2zm0 18.156a8.15 8.15 0 0 1-4.157-1.137l-.298-.177-3.048.797.813-2.97-.194-.306a8.135 8.135 0 0 1-1.257-4.373c0-4.502 3.664-8.166 8.171-8.166a8.12 8.12 0 0 1 5.775 2.393 8.107 8.107 0 0 1 2.392 5.775c-.004 4.507-3.668 8.164-8.197 8.164z"/>
+                                                        </svg>
+                                                    </a>
+
+                                                    <span x-show="copied" x-cloak class="ps-card-action-copied">Copiado!</span>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach

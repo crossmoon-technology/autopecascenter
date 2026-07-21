@@ -15,21 +15,16 @@ class PartsTable
     {
         return $table
             ->columns([
+                TextColumn::make('codigo')
+                    ->searchable()
+                    ->alignCenter(),
                 ImageColumn::make('catalog.manufacturer.logo')
                     ->disk('public')
                     ->imageHeight(15)
                     ->label('Fabricante')
                     ->alignCenter(),
-                TextColumn::make('codigo')
-                    ->searchable()
-                    ->alignCenter(),
                 TextColumn::make('catalog.name')
-                    ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('tipo')
-                    ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('categoria')
+                    ->label('Catálogo')
                     ->searchable()
                     ->alignCenter(),
                 TextColumn::make('created_at')

@@ -44,15 +44,37 @@ class ImportCatalogPartsTest extends TestCase
         $this->assertSame(2, Part::query()->where('catalog_id', $catalog->id)->count());
 
         $part = Part::query()->where('codigo', '16088')->firstOrFail();
-        $this->assertSame('MOLA A GÁS', $part->descricao);
-        $this->assertSame('PORTA MALAS', $part->posicao);
-        $this->assertSame('MOLASAGÅS', $part->categoria);
+        $this->assertSame('MOLA A GÁS', $part->atributos['descricao']);
+        $this->assertSame('PORTA MALAS', $part->atributos['posicao']);
+        $this->assertSame('MOLASAGÅS', $part->atributos['categoria']);
         $this->assertSame(['GS440'], $part->conversoes['MONROE']);
         $this->assertSame(['MG 16214', 'MG 16215'], $part->conversoes['NAKATA']);
 
         $catalog->refresh();
         $this->assertTrue($catalog->is_active);
         $this->assertSame(ImportStatus::Imported, $catalog->import_status);
+    }
+
+    public function test_stores_whatever_fields_a_different_manufacturer_brings_as_generic_atributos(): void
+    {
+        Storage::fake('local');
+        $catalog = Catalog::factory()->create(['is_active' => false]);
+        Storage::disk('local')->put($catalog->file, json_encode([
+            'codigo' => 'HF-21',
+            'montadora' => 'CHEVROLET',
+            'veiculo' => 'A10',
+            'ano' => '1986 até 1999',
+            'eixo' => 'D',
+        ]));
+
+        ImportCatalogParts::dispatchSync($catalog);
+
+        $part = Part::query()->where('codigo', 'HF-21')->firstOrFail();
+        $this->assertSame('CHEVROLET', $part->atributos['montadora']);
+        $this->assertSame('A10', $part->atributos['veiculo']);
+        $this->assertSame('1986 até 1999', $part->atributos['ano']);
+        $this->assertSame('D', $part->atributos['eixo']);
+        $this->assertArrayNotHasKey('descricao', $part->atributos);
     }
 
     public function test_reimporting_updates_existing_parts_instead_of_duplicating(): void
@@ -72,7 +94,7 @@ class ImportCatalogPartsTest extends TestCase
         ImportCatalogParts::dispatchSync($catalog);
 
         $this->assertSame(1, Part::query()->where('catalog_id', $catalog->id)->count());
-        $this->assertSame('Descrição nova', Part::query()->where('codigo', '16088')->firstOrFail()->descricao);
+        $this->assertSame('Descrição nova', Part::query()->where('codigo', '16088')->firstOrFail()->atributos['descricao']);
     }
 
     public function test_does_not_activate_the_catalog_when_nothing_could_be_imported(): void

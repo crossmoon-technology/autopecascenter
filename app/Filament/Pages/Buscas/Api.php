@@ -3,7 +3,12 @@
 namespace App\Filament\Pages\Buscas;
 
 use App\Filament\Pages\Buscas\Api\Enums\SearchStatus;
+use App\Filament\Pages\Buscas\Concerns\AddsToQuotation;
+use App\Filament\Pages\Buscas\Concerns\RecordsSearchHistory;
+use App\Filament\Pages\Buscas\Concerns\ResolvesPreferredManufacturers;
 use App\Models\Manufacturer;
+use App\Models\QuotationItem\Enums\Source;
+use App\Models\SearchHistory\Enums\Method;
 use App\Services\PartSearch\PartSearchProviderRegistry;
 use BackedEnum;
 use Filament\Forms\Components\TextInput;
@@ -19,7 +24,10 @@ use UnitEnum;
 
 class Api extends Page implements HasForms
 {
+    use AddsToQuotation;
     use InteractsWithForms;
+    use RecordsSearchHistory;
+    use ResolvesPreferredManufacturers;
 
     protected string $view = 'filament.pages.buscas.api';
 
@@ -47,14 +55,26 @@ class Api extends Page implements HasForms
      */
     public array $results = [];
 
+    /**
+     * @var array<string>
+     */
+    public array $quotedApiKeys = [];
+
     public function mount(): void
     {
+        // fill() sem argumentos hidrata os defaults de todos os campos — passar um
+        // array parcial pra ele pula essa hidratação nos campos ausentes.
         $this->form->fill();
 
-        $this->data['manufacturers'] = $this->searchableManufacturers()
-            ->pluck('id')
-            ->mapWithKeys(fn (int $id) => [$id => true])
-            ->all();
+        // Vindo do Histórico, o código chega via query string pra pré-preencher o campo
+        // sem já disparar a busca — o usuário confirma clicando em "Buscar".
+        if (filled($codigo = request()->query('codigo'))) {
+            $this->data['codigo'] = $codigo;
+        }
+
+        $this->data['manufacturers'] = $this->defaultManufacturerSelection($this->searchableManufacturers());
+
+        $this->quotedApiKeys = $this->currentlyQuotedExternalKeys(Source::Api);
     }
 
     public function form(Schema $schema): Schema
@@ -65,7 +85,8 @@ class Api extends Page implements HasForms
                     ->label('Código da peça')
                     ->placeholder('Ex: 16002')
                     ->required()
-                    ->autofocus(),
+                    ->autofocus()
+                    ->extraInputAttributes(['id' => 'busca-termo-input']),
             ])
             ->statePath('data');
     }
@@ -105,6 +126,8 @@ class Api extends Page implements HasForms
 
         $this->activeQuery = trim($state['codigo'] ?? '');
         $this->searched = true;
+
+        $this->recordSearchHistory($this->activeQuery, Method::Api);
 
         $selectedIds = $this->selectedManufacturerIds();
         $manufacturers = $this->searchableManufacturers()->whereIn('id', $selectedIds);
@@ -150,11 +173,30 @@ class Api extends Page implements HasForms
     {
         $registry = app(PartSearchProviderRegistry::class);
 
-        return Manufacturer::query()
+        $eligible = Manufacturer::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get()
             ->filter(fn (Manufacturer $manufacturer) => $registry->for($manufacturer) !== null)
             ->values();
+
+        return $this->filterToEnabledManufacturers($eligible);
+    }
+
+    public function itemShareUrl(string $codigo): string
+    {
+        return static::getUrl(['codigo' => $codigo]);
+    }
+
+    public function addToQuotation(int $manufacturer_id, string $codigo, ?string $descricao = null): void
+    {
+        $key = "{$manufacturer_id}|{$codigo}";
+        $isNowQuoted = $this->toggleExternalItemInQuotation(Source::Api, $manufacturer_id, $codigo, $descricao);
+
+        if ($isNowQuoted) {
+            $this->quotedApiKeys[] = $key;
+        } else {
+            $this->quotedApiKeys = array_values(array_diff($this->quotedApiKeys, [$key]));
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Enums\Role;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
@@ -20,7 +21,10 @@ class AuthService
 
     public function register(RegisterRequest $request): User
     {
-        $user = User::create($request->only('name', 'email', 'document', 'password'));
+        $user = User::create([
+            ...$request->only('name', 'email', 'document', 'password', 'registration_ip'),
+            'role' => Role::Client,
+        ]);
 
         Auth::login($user);
 

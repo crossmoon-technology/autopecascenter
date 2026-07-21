@@ -46,17 +46,16 @@ class ImportCatalogParts implements ShouldQueue
                     continue;
                 }
 
+                $atributos = collect($data)->except(['codigo', 'conversoes'])->filter(fn ($value) => ! is_null($value));
+
                 Part::query()->updateOrCreate(
                     [
                         'catalog_id' => $this->catalog->id,
                         'codigo' => $data['codigo'],
                     ],
                     [
-                        'descricao' => $data['descricao'] ?? null,
-                        'tipo' => $data['tipo'] ?? null,
-                        'posicao' => $data['posicao'] ?? null,
-                        'categoria' => $data['categoria'] ?? null,
                         'conversoes' => $data['conversoes'] ?? null,
+                        'atributos' => $atributos->isNotEmpty() ? $atributos->all() : null,
                     ]
                 );
 
