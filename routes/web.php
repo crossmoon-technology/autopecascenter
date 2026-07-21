@@ -1,11 +1,16 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PublicPartController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('home');
 })->name('home');
+
+Route::get('/p/{part}', [PublicPartController::class, 'show'])
+    ->name('parts.public')
+    ->middleware(['signed', 'throttle:60,1']);
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

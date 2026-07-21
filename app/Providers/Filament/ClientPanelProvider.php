@@ -27,8 +27,13 @@ class ClientPanelProvider extends PanelProvider
             ->id('client')
             ->path('cliente')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#F94603'),
             ])
+            ->viteTheme('resources/css/filament/client/theme.css')
+            ->brandName('Auto Peças Center')
+            ->brandLogo(fn () => view('filament.brand-logo'))
+            ->brandLogoHeight('2rem')
+            ->favicon(asset('images/apc-favicon.svg'))
             ->discoverResources(in: app_path('Filament/Client/Resources'), for: 'App\Filament\Client\Resources')
             ->discoverPages(in: app_path('Filament/Client/Pages'), for: 'App\Filament\Client\Pages')
             ->pages([

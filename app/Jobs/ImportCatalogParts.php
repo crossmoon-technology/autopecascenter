@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\Catalog;
+use App\Models\Catalog\Enums\ImportStatus;
 use App\Models\Part;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ImportCatalogParts implements ShouldQueue
 {
@@ -26,40 +28,50 @@ class ImportCatalogParts implements ShouldQueue
             return;
         }
 
-        $imported_count = 0;
+        $this->catalog->forceFill(['import_status' => ImportStatus::Importing])->save();
 
-        foreach (preg_split('/\r\n|\r|\n/', $disk->get($this->catalog->file)) as $line) {
-            $line = trim($line);
+        try {
+            $imported_count = 0;
 
-            if ($line === '') {
-                continue;
+            foreach (preg_split('/\r\n|\r|\n/', $disk->get($this->catalog->file)) as $line) {
+                $line = trim($line);
+
+                if ($line === '') {
+                    continue;
+                }
+
+                $data = json_decode($line, true);
+
+                if (! is_array($data) || blank($data['codigo'] ?? null)) {
+                    continue;
+                }
+
+                $atributos = collect($data)->except(['codigo', 'conversoes'])->filter(fn ($value) => ! is_null($value));
+
+                Part::query()->updateOrCreate(
+                    [
+                        'catalog_id' => $this->catalog->id,
+                        'codigo' => $data['codigo'],
+                    ],
+                    [
+                        'conversoes' => $data['conversoes'] ?? null,
+                        'atributos' => $atributos->isNotEmpty() ? $atributos->all() : null,
+                    ]
+                );
+
+                $imported_count++;
             }
 
-            $data = json_decode($line, true);
-
-            if (! is_array($data) || blank($data['codigo'] ?? null)) {
-                continue;
+            if ($imported_count > 0) {
+                $this->catalog->update(['is_active' => true]);
+                $this->catalog->forceFill(['import_status' => ImportStatus::Imported])->save();
+            } else {
+                $this->catalog->forceFill(['import_status' => ImportStatus::NotImported])->save();
             }
+        } catch (Throwable $exception) {
+            $this->catalog->forceFill(['import_status' => ImportStatus::NotImported])->save();
 
-            Part::query()->updateOrCreate(
-                [
-                    'catalog_id' => $this->catalog->id,
-                    'codigo' => $data['codigo'],
-                ],
-                [
-                    'descricao' => $data['descricao'] ?? null,
-                    'tipo' => $data['tipo'] ?? null,
-                    'posicao' => $data['posicao'] ?? null,
-                    'categoria' => $data['categoria'] ?? null,
-                    'conversoes' => $data['conversoes'] ?? null,
-                ]
-            );
-
-            $imported_count++;
-        }
-
-        if ($imported_count > 0) {
-            $this->catalog->update(['is_active' => true]);
+            throw $exception;
         }
     }
 }

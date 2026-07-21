@@ -41,6 +41,11 @@ class ManufacturerForm
                 TextInput::make('external_link')
                     ->url()
                     ->nullable(),
+                TextInput::make('iframe_url')
+                    ->label('URL do iframe')
+                    ->url()
+                    ->nullable()
+                    ->helperText('Página de busca do fabricante que pode ser embutida em iframe.'),
                 Toggle::make('is_active')
                     ->required(),
             ]);

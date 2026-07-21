@@ -1,0 +1,118 @@
+/**
+ * Auto Peças Center brand skin for Filament panels: a permanently dark
+ * sidebar (regardless of light/dark mode) with the orange brand accent,
+ * matching the marketing site. Declared unlayered so it wins over the
+ * vendor `layer(components)` rules regardless of dark: variants.
+ */
+
+:root {
+    --apc-sidebar-bg: #08090b;
+    --apc-sidebar-border: rgb(255 255 255 / 8%);
+}
+
+.fi-sidebar,
+.fi-sidebar-header,
+.fi-body-has-topbar .fi-sidebar-header {
+    background-color: var(--apc-sidebar-bg);
+}
+
+.fi-sidebar-header {
+    box-shadow: none;
+    border-bottom: 1px solid var(--apc-sidebar-border);
+}
+
+.fi-sidebar.fi-sidebar-open {
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+}
+
+/* The desktop topbar owns the search/user-menu bar; the sidebar owns the
+   brand mark, so keep the sidebar header visible at every breakpoint. */
+.fi-body-has-topbar .fi-sidebar-header {
+    display: flex;
+}
+
+.fi-topbar-start a:has(.fi-logo),
+.fi-topbar-start > .fi-logo {
+    display: none;
+}
+
+.fi-sidebar-close-overlay {
+    background-color: rgb(0 0 0 / 60%);
+}
+
+.fi-sidebar-group-label {
+    color: rgb(255 255 255 / 45%);
+}
+
+.fi-sidebar-group-btn > .fi-icon,
+.fi-sidebar-group-dropdown-trigger-btn > .fi-icon {
+    color: rgb(255 255 255 / 40%);
+}
+
+.fi-sidebar-group-dropdown-trigger-btn:hover,
+.fi-sidebar-group-dropdown-trigger-btn:focus-visible {
+    background-color: rgb(255 255 255 / 6%);
+}
+
+.fi-sidebar-item-label {
+    color: rgb(255 255 255 / 75%);
+}
+
+.fi-sidebar-item-btn > .fi-icon {
+    color: rgb(255 255 255 / 40%);
+}
+
+.fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover,
+.fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:focus-visible {
+    background-color: rgb(255 255 255 / 6%);
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background-color: color-mix(in oklab, var(--primary-600) 18%, transparent);
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+    color: var(--primary-400);
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    color: white;
+}
+
+.fi-sidebar-item-grouped-border-part-not-first,
+.fi-sidebar-item-grouped-border-part-not-last {
+    background-color: rgb(255 255 255 / 15%);
+}
+
+.fi-sidebar-item.fi-active .fi-sidebar-item-grouped-border-part {
+    background-color: var(--primary-400);
+}
+
+.fi-sidebar-database-notifications-btn,
+.fi-sidebar-database-notifications-btn-label {
+    color: rgb(255 255 255 / 75%);
+}
+
+.fi-sidebar-database-notifications-btn:hover,
+.fi-sidebar-database-notifications-btn:focus-visible {
+    background-color: rgb(255 255 255 / 6%);
+}
+
+.fi-sidebar-database-notifications-btn > .fi-icon {
+    color: rgb(255 255 255 / 40%);
+}
+
+.fi-sidebar-footer {
+    border-top: 1px solid var(--apc-sidebar-border);
+    padding-top: 0.75rem;
+}
+
+.fi-sidebar-header .fi-icon-btn {
+    color: rgb(255 255 255 / 60%);
+}
+
+.fi-sidebar-header .fi-icon-btn:hover,
+.fi-sidebar-header .fi-icon-btn:focus-visible {
+    background-color: rgb(255 255 255 / 8%);
+}

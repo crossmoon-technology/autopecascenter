@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Filament\Resources\Catalogs\Pages\CreateCatalog;
 use App\Filament\Resources\Catalogs\Pages\EditCatalog;
 use App\Models\Catalog;
+use App\Models\Catalog\Enums\ImportStatus;
 use App\Models\Manufacturer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,10 +38,10 @@ class CatalogIsActiveTest extends TestCase
         $this->assertFalse(Catalog::firstOrFail()->is_active);
     }
 
-    public function test_is_active_can_be_set_to_true_on_edit(): void
+    public function test_is_active_can_be_set_to_true_on_edit_once_imported(): void
     {
         Storage::fake('local');
-        $catalog = Catalog::factory()->create(['is_active' => false]);
+        $catalog = Catalog::factory()->create(['is_active' => false, 'import_status' => ImportStatus::Imported]);
         Storage::disk('local')->put($catalog->file, '{"code":"A1"}');
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
@@ -50,5 +51,35 @@ class CatalogIsActiveTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertTrue($catalog->refresh()->is_active);
+    }
+
+    public function test_is_active_stays_disabled_when_import_has_not_run_yet(): void
+    {
+        Storage::fake('local');
+        $catalog = Catalog::factory()->create(['is_active' => false, 'import_status' => ImportStatus::NotImported]);
+        Storage::disk('local')->put($catalog->file, '{"code":"A1"}');
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(EditCatalog::class, ['record' => $catalog->getKey()])
+            ->fillForm(['is_active' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse($catalog->refresh()->is_active);
+    }
+
+    public function test_is_active_stays_disabled_while_importing(): void
+    {
+        Storage::fake('local');
+        $catalog = Catalog::factory()->create(['is_active' => false, 'import_status' => ImportStatus::Importing]);
+        Storage::disk('local')->put($catalog->file, '{"code":"A1"}');
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(EditCatalog::class, ['record' => $catalog->getKey()])
+            ->fillForm(['is_active' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse($catalog->refresh()->is_active);
     }
 }

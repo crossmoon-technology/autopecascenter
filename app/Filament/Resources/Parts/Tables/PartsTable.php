@@ -15,26 +15,16 @@ class PartsTable
     {
         return $table
             ->columns([
-                ImageColumn::make('catalog.manufacturer.icon')
-                    ->disk('public')
-                    ->label('Fabricante')
-                    ->alignCenter(),
-                TextColumn::make('catalog.name')
-                    ->searchable()
-                    ->alignCenter(),
                 TextColumn::make('codigo')
                     ->searchable()
                     ->alignCenter(),
-                TextColumn::make('descricao')
-                    ->searchable()
+                ImageColumn::make('catalog.manufacturer.logo')
+                    ->disk('public')
+                    ->imageHeight(15)
+                    ->label('Fabricante')
                     ->alignCenter(),
-                TextColumn::make('tipo')
-                    ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('posicao')
-                    ->searchable()
-                    ->alignCenter(),
-                TextColumn::make('categoria')
+                TextColumn::make('catalog.name')
+                    ->label('Catálogo')
                     ->searchable()
                     ->alignCenter(),
                 TextColumn::make('created_at')

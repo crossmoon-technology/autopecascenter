@@ -23,13 +23,15 @@ class PartFactory extends Factory
         return [
             'catalog_id' => Catalog::factory(),
             'codigo' => fake()->unique()->numerify('#####'),
-            'descricao' => fake()->words(3, true),
-            'tipo' => fake()->words(2, true),
-            'posicao' => fake()->words(2, true),
-            'categoria' => fake()->word(),
             'conversoes' => [
                 'MONROE' => [fake()->bothify('??####')],
                 'NAKATA' => [fake()->bothify('MG ?????')],
+            ],
+            'atributos' => [
+                'descricao' => fake()->words(3, true),
+                'tipo' => fake()->words(2, true),
+                'posicao' => fake()->words(2, true),
+                'categoria' => fake()->word(),
             ],
         ];
     }

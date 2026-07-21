@@ -48,4 +48,64 @@ class CatalogUploadTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['file']);
     }
+
+    public function test_rejects_a_file_with_a_utf8_bom(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $manufacturer = Manufacturer::factory()->create();
+
+        Livewire::test(CreateCatalog::class)
+            ->fillForm([
+                'manufacturer_id' => $manufacturer->getKey(),
+                'name' => 'Catálogo com BOM',
+                'file' => UploadedFile::fake()->createWithContent(
+                    'catalog.jsonl',
+                    "\xEF\xBB\xBF{\"codigo\":\"A1\"}\n"
+                ),
+                'extracted_at' => '2026-07-01',
+                'is_active' => true,
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['file']);
+    }
+
+    public function test_rejects_a_file_with_crlf_line_endings(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $manufacturer = Manufacturer::factory()->create();
+
+        Livewire::test(CreateCatalog::class)
+            ->fillForm([
+                'manufacturer_id' => $manufacturer->getKey(),
+                'name' => 'Catálogo com CRLF',
+                'file' => UploadedFile::fake()->createWithContent(
+                    'catalog.jsonl',
+                    "{\"codigo\":\"A1\"}\r\n{\"codigo\":\"A2\"}\r\n"
+                ),
+                'extracted_at' => '2026-07-01',
+                'is_active' => true,
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['file']);
+    }
+
+    public function test_rejects_a_file_with_an_invalid_json_line(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $manufacturer = Manufacturer::factory()->create();
+
+        Livewire::test(CreateCatalog::class)
+            ->fillForm([
+                'manufacturer_id' => $manufacturer->getKey(),
+                'name' => 'Catálogo com linha inválida',
+                'file' => UploadedFile::fake()->createWithContent(
+                    'catalog.jsonl',
+                    "{\"codigo\":\"A1\"}\nnot valid json\n"
+                ),
+                'extracted_at' => '2026-07-01',
+                'is_active' => true,
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['file']);
+    }
 }
