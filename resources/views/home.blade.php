@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>{{ config('app.name') }}</h1>
+    <main>
+        <div class="container">
+            <h1>main</h1>
+        </div>
+    </main>
 @endsection
