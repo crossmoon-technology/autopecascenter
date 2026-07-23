@@ -1,4 +1,5 @@
-html > body > div.container > main {
-    min-height: calc(100vh - 100px);
-    background-color: #eceef5;
+@use "../partials/Header/variables.scss";
+
+html > body > main {
+    min-height: calc(100vh - #{variables.$height-header});
 }
