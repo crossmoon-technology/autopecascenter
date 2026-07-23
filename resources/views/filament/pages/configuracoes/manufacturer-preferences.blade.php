@@ -24,18 +24,18 @@
             transition: border-color 0.15s ease, background-color 0.15s ease;
         }
         .mp-manufacturer-card:hover {
-            border-color: rgba(37, 99, 235, 0.5);
+            border-color: rgba(249, 70, 3, 0.5);
         }
         .mp-manufacturer-card:focus-visible {
-            outline: 2px solid rgb(37 99 235);
+            outline: 2px solid rgb(249 70 3);
             outline-offset: 2px;
         }
         .mp-manufacturer-card-active {
-            border-color: rgb(37 99 235);
-            background: rgba(37, 99, 235, 0.08);
+            border-color: rgb(249 70 3);
+            background: rgba(249, 70, 3, 0.08);
         }
         .mp-manufacturer-card-active:hover {
-            border-color: rgb(37 99 235);
+            border-color: rgb(249 70 3);
         }
         .mp-manufacturer-card-icon {
             display: flex;
@@ -101,7 +101,7 @@
             padding: 0.5rem 1rem;
             border: none;
             border-radius: 0.5rem;
-            background-color: rgb(37 99 235);
+            background-color: rgb(249 70 3);
             color: #fff;
             font-size: 0.875rem;
             font-weight: 600;
@@ -110,7 +110,7 @@
             transition: background-color 0.15s ease;
         }
         .mp-save-button:hover {
-            background-color: rgb(29 78 216);
+            background-color: rgb(199 56 2);
         }
         .mp-empty {
             font-size: 0.875rem;

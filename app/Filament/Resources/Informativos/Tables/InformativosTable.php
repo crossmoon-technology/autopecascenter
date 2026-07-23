@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Informativos\Tables;
 
+use App\Filament\Resources\Informativos\InformativoResource;
 use App\Models\Catalog;
 use App\Models\Informativo;
 use App\Models\Informativo\Enums\InformativoType;
@@ -81,6 +82,10 @@ class InformativosTable
                 Action::make('addInformativos')
                     ->label('Adicionar informativos')
                     ->icon('heroicon-o-plus')
+                    // Ação customizada — diferente do CreateAction padrão do Filament,
+                    // não checa a policy sozinha (ver App\Policies\InformativoPolicy),
+                    // então precisa dessa checagem explícita.
+                    ->visible(fn (): bool => InformativoResource::canCreate())
                     ->schema([
                         Select::make('catalog_id')
                             ->label('Catálogo')

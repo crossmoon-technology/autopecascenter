@@ -14,7 +14,7 @@ class ClientManufacturersPageTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_lists_only_active_manufacturers_with_their_external_link(): void
+    public function test_lists_only_active_manufacturers_without_a_clickable_link(): void
     {
         $active = Manufacturer::factory()->create([
             'name' => 'Cofap',
@@ -31,6 +31,36 @@ class ClientManufacturersPageTest extends TestCase
         Livewire::test(Manufacturers::class)
             ->assertSee($active->name)
             ->assertDontSee($inactive->name)
-            ->assertSeeHtml('href="https://www.cofap.com.br"');
+            ->assertDontSeeHtml('href="https://www.cofap.com.br"');
+    }
+
+    public function test_shows_only_manufacturers_enabled_by_the_inviting_seller(): void
+    {
+        $enabled = Manufacturer::factory()->create(['name' => 'Cofap']);
+        $notEnabled = Manufacturer::factory()->create(['name' => 'Magneti Marelli']);
+
+        $seller = User::factory()->create(['role' => Role::Admin]);
+        $seller->preferredManufacturers()->attach($enabled);
+
+        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $this->actingAs($client);
+
+        Livewire::test(Manufacturers::class)
+            ->assertSee('Cofap')
+            ->assertDontSee('Magneti Marelli');
+    }
+
+    public function test_falls_back_to_all_active_manufacturers_when_the_seller_has_no_preference(): void
+    {
+        $one = Manufacturer::factory()->create(['name' => 'Cofap']);
+        $another = Manufacturer::factory()->create(['name' => 'Magneti Marelli']);
+
+        $seller = User::factory()->create(['role' => Role::Admin]);
+        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $this->actingAs($client);
+
+        Livewire::test(Manufacturers::class)
+            ->assertSee($one->name)
+            ->assertSee($another->name);
     }
 }

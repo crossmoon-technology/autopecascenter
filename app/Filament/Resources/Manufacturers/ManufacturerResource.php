@@ -24,6 +24,8 @@ class ManufacturerResource extends Resource
 
     protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BuildingOffice2;
 
+    protected static ?string $navigationLabel = 'Fabricantes';
+
     public static function form(Schema $schema): Schema
     {
         return ManufacturerForm::configure($schema);

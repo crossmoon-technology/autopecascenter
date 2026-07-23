@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Buscas;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Models\FavoriteList;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -19,6 +20,7 @@ use UnitEnum;
 
 class Favorites extends Page implements HasTable
 {
+    use HasHelpAction;
     use InteractsWithTable;
 
     protected string $view = 'filament.pages.buscas.favorites';
@@ -37,6 +39,22 @@ class Favorites extends Page implements HasTable
     {
         // Garante que "Lista padrão" já apareça mesmo pra quem nunca favoritou nada.
         Auth::user()->defaultFavoriteList();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona a página de Favoritas';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Peças que você marcou com a estrela ficam aqui, organizadas em listas — toda conta já tem uma "Lista padrão", mas dá pra criar outras pra organizar por cliente, categoria etc.</p>'.
+            '<p>Clique em "Nova lista" pra criar mais uma, ou numa lista existente pra ver as peças dela.</p>';
     }
 
     public function table(Table $table): Table

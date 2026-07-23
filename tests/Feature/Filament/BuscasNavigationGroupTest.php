@@ -41,7 +41,7 @@ class BuscasNavigationGroupTest extends TestCase
     {
         foreach (['admin', 'super-admin'] as $panel_id) {
             $this->assertSame(
-                ['Buscas', 'Configurações'],
+                ['Buscas', 'Vendas', 'Configurações'],
                 Filament::getPanel($panel_id)->getNavigationGroups(),
             );
         }

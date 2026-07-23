@@ -27,14 +27,14 @@
         }
         .if-manufacturer-chip-active {
             opacity: 1;
-            border-color: rgb(37 99 235);
-            background: rgba(37, 99, 235, 0.1);
+            border-color: rgb(249 70 3);
+            background: rgba(249, 70, 3, 0.1);
         }
         .if-manufacturer-chip-active:hover {
             opacity: 1;
         }
         .if-manufacturer-chip:focus-visible {
-            outline: 2px solid rgb(37 99 235);
+            outline: 2px solid rgb(249 70 3);
             outline-offset: 2px;
         }
         .if-manufacturer-chip-icon {
@@ -105,10 +105,10 @@
         .if-tab-active {
             opacity: 1;
             font-weight: 600;
-            background: rgba(37, 99, 235, 0.12);
-            border-color: rgb(37 99 235);
+            background: rgba(249, 70, 3, 0.12);
+            border-color: rgb(249 70 3);
             border-bottom: 1px solid transparent;
-            color: rgb(37 99 235);
+            color: rgb(249 70 3);
         }
         .if-tab-icon {
             display: inline-flex;
@@ -171,14 +171,14 @@
             padding: 0.4375rem 0.875rem;
             border-radius: 0.5rem;
             border: none;
-            background-color: rgb(37 99 235);
+            background-color: rgb(249 70 3);
             color: #fff;
             font-size: 0.8125rem;
             font-weight: 600;
             cursor: pointer;
         }
         .if-add-quotation-btn:hover {
-            background-color: rgb(29 78 216);
+            background-color: rgb(199 56 2);
         }
         .if-add-quotation-btn svg {
             width: 0.875rem;

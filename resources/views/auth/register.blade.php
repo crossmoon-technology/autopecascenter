@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Criar conta — {{ config('app.name') }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/scss/app.scss'])
 </head>
 
@@ -16,7 +17,7 @@
 
             <div class="register-card__header">
                 <a href="{{ url('/') }}" class="register-card__logo">
-                    <img src="{{ asset('images/autopecascenter-logo.png') }}" alt="{{ config('app.name') }}">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
                 </a>
                 <h1 class="register-card__title">Crie sua conta</h1>
                 <p class="register-card__subtitle">Preencha os dados abaixo para começar</p>

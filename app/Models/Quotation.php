@@ -34,6 +34,11 @@ class Quotation extends Model
         return $this->hasMany(QuotationItem::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function displayName(): string
     {
         return $this->name ?: "Cotação #{$this->id}";
@@ -42,14 +47,19 @@ class Quotation extends Model
     /**
      * Item de um resultado real da Base de dados — tem um Part estável pra linkar de
      * volta pra página dedicada da peça. firstOrCreate evita duplicar a mesma peça se o
-     * usuário clicar "adicionar" mais de uma vez sem querer.
+     * usuário clicar "adicionar" mais de uma vez sem querer — nesse caso a quantidade se
+     * acumula em vez de ficar presa em 1.
      */
-    public function addPart(Part $part): QuotationItem
+    public function addPart(Part $part, int $quantity = 1): QuotationItem
     {
         $item = $this->items()->firstOrCreate(
             ['source' => Source::Database, 'part_id' => $part->id],
-            ['manufacturer_id' => $part->catalog->manufacturer_id, 'codigo' => $part->codigo],
+            ['manufacturer_id' => $part->catalog->manufacturer_id, 'codigo' => $part->codigo, 'quantity' => $quantity],
         );
+
+        if (! $item->wasRecentlyCreated) {
+            $item->increment('quantity', $quantity);
+        }
 
         $this->touch();
 
@@ -61,12 +71,16 @@ class Quotation extends Model
      * dois tem um registro estável em `parts`, só o código e (quando disponível) uma
      * descrição soltos.
      */
-    public function addExternalItem(Source $source, int $manufacturer_id, string $codigo, ?string $descricao = null): QuotationItem
+    public function addExternalItem(Source $source, int $manufacturer_id, string $codigo, ?string $descricao = null, int $quantity = 1): QuotationItem
     {
         $item = $this->items()->firstOrCreate(
             ['source' => $source, 'manufacturer_id' => $manufacturer_id, 'codigo' => $codigo, 'part_id' => null],
-            ['descricao' => $descricao],
+            ['descricao' => $descricao, 'quantity' => $quantity],
         );
+
+        if (! $item->wasRecentlyCreated) {
+            $item->increment('quantity', $quantity);
+        }
 
         $this->touch();
 

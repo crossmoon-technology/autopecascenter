@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['quotation_id', 'part_id', 'manufacturer_id', 'source', 'codigo', 'descricao', 'note'])]
+#[Fillable(['quotation_id', 'part_id', 'manufacturer_id', 'source', 'codigo', 'quantity', 'descricao', 'note'])]
 class QuotationItem extends Model
 {
     /** @use HasFactory<QuotationItemFactory> */

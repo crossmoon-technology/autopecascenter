@@ -10,6 +10,8 @@ export default defineConfig({
                 'resources/scss/app.scss',
                 'resources/js/app.js',
                 'resources/js/informativo-preview.js',
+                'resources/js/onboarding-tour.js',
+                'resources/css/onboarding-tour.css',
                 'resources/css/filament/admin/theme.css',
                 'resources/css/filament/super-admin/theme.css',
                 'resources/css/filament/client/theme.css',

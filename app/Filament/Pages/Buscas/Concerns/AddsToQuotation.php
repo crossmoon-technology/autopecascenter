@@ -15,18 +15,18 @@ trait AddsToQuotation
      * Usado por lugares sem ícone pra "marcar" o estado (ex: a action de texto em
      * Favoritos) — idempotente, clicar de novo não duplica nem remove.
      */
-    protected function addPartToQuotation(Part $part): void
+    protected function addPartToQuotation(Part $part, int $quantity = 1): void
     {
         $quotation = Auth::user()->openQuotation();
-        $quotation->addPart($part);
+        $quotation->addPart($part, $quantity);
 
         $this->notifyAddedToQuotation($quotation);
     }
 
-    protected function addExternalItemToQuotation(Source $source, int $manufacturer_id, string $codigo, ?string $descricao = null): void
+    protected function addExternalItemToQuotation(Source $source, int $manufacturer_id, string $codigo, ?string $descricao = null, int $quantity = 1): void
     {
         $quotation = Auth::user()->openQuotation();
-        $quotation->addExternalItem($source, $manufacturer_id, $codigo, $descricao);
+        $quotation->addExternalItem($source, $manufacturer_id, $codigo, $descricao, $quantity);
 
         $this->notifyAddedToQuotation($quotation);
     }

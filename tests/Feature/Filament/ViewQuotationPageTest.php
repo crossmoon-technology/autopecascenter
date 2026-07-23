@@ -76,7 +76,7 @@ class ViewQuotationPageTest extends TestCase
         $item = $quotation->items()->create(['source' => Source::Iframe, 'codigo' => 'HF-21']);
 
         Livewire::test(ViewQuotation::class, ['quotation' => $quotation->id])
-            ->callTableAction('editNote', $item, data: ['note' => 'Cliente pediu urgência'])
+            ->callTableAction('editNote', $item, data: ['quantity' => 1, 'note' => 'Cliente pediu urgência'])
             ->assertNotified();
 
         $this->assertDatabaseHas('quotation_items', [
@@ -85,16 +85,42 @@ class ViewQuotationPageTest extends TestCase
         ]);
     }
 
-    public function test_edit_note_action_prefills_the_existing_note(): void
+    public function test_edit_note_action_prefills_the_existing_note_and_quantity(): void
     {
         $user = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($user);
         $quotation = $user->quotations()->create(['status' => Status::Open]);
-        $item = $quotation->items()->create(['source' => Source::Iframe, 'codigo' => 'HF-21', 'note' => 'Nota antiga']);
+        $item = $quotation->items()->create(['source' => Source::Iframe, 'codigo' => 'HF-21', 'quantity' => 3, 'note' => 'Nota antiga']);
 
         Livewire::test(ViewQuotation::class, ['quotation' => $quotation->id])
             ->mountTableAction('editNote', $item)
-            ->assertTableActionDataSet(['note' => 'Nota antiga']);
+            ->assertTableActionDataSet(['quantity' => 3, 'note' => 'Nota antiga']);
+    }
+
+    public function test_edit_action_updates_the_quantity(): void
+    {
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $this->actingAs($user);
+        $quotation = $user->quotations()->create(['status' => Status::Open]);
+        $item = $quotation->items()->create(['source' => Source::Iframe, 'codigo' => 'HF-21', 'quantity' => 1]);
+
+        Livewire::test(ViewQuotation::class, ['quotation' => $quotation->id])
+            ->callTableAction('editNote', $item, data: ['quantity' => 5, 'note' => null])
+            ->assertNotified();
+
+        $this->assertSame(5, $item->fresh()->quantity);
+    }
+
+    public function test_shows_the_quantity_column(): void
+    {
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $this->actingAs($user);
+        $quotation = $user->quotations()->create(['status' => Status::Open]);
+        $quotation->items()->create(['source' => Source::Iframe, 'codigo' => 'HF-21', 'quantity' => 7]);
+
+        Livewire::test(ViewQuotation::class, ['quotation' => $quotation->id])
+            ->assertSuccessful()
+            ->assertSee('7');
     }
 
     public function test_save_action_closes_the_quotation_with_the_given_name(): void

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Buscas;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Filament\Pages\Buscas\Api\Enums\SearchStatus;
 use App\Filament\Pages\Buscas\Concerns\AddsToQuotation;
 use App\Filament\Pages\Buscas\Concerns\RecordsSearchHistory;
@@ -25,6 +26,7 @@ use UnitEnum;
 class Api extends Page implements HasForms
 {
     use AddsToQuotation;
+    use HasHelpAction;
     use InteractsWithForms;
     use RecordsSearchHistory;
     use ResolvesPreferredManufacturers;
@@ -75,6 +77,22 @@ class Api extends Page implements HasForms
         $this->data['manufacturers'] = $this->defaultManufacturerSelection($this->searchableManufacturers());
 
         $this->quotedApiKeys = $this->currentlyQuotedExternalKeys(Source::Api);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona a busca por API';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Aqui a busca acontece via integração direta com o sistema de cada fabricante (quando disponível) — geralmente mais rápida que abrir o site, mas depende da disponibilidade do fabricante no momento da busca.</p>'.
+            '<p>Cada fabricante selecionado aparece na sua própria aba, carregando os resultados de forma independente.</p>';
     }
 
     public function form(Schema $schema): Schema

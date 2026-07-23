@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Configuracoes;
 
+use App\Filament\Concerns\HasHelpAction;
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -15,6 +16,7 @@ use UnitEnum;
 
 class GeneralSettings extends Page implements HasForms
 {
+    use HasHelpAction;
     use InteractsWithForms;
 
     protected string $view = 'filament.pages.configuracoes.general-settings';
@@ -39,6 +41,21 @@ class GeneralSettings extends Page implements HasForms
         $this->form->fill([
             'logo' => Auth::user()->logo,
         ]);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona a página Geral';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Cadastre sua logo aqui — ela aparece ao lado da logo da Auto Peças Center nas cotações que você exportar em PDF.</p>';
     }
 
     public function form(Schema $schema): Schema

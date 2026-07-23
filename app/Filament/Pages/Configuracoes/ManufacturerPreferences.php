@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Configuracoes;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Models\Manufacturer;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -13,6 +14,8 @@ use UnitEnum;
 
 class ManufacturerPreferences extends Page
 {
+    use HasHelpAction;
+
     protected string $view = 'filament.pages.configuracoes.manufacturer-preferences';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;
@@ -38,6 +41,21 @@ class ManufacturerPreferences extends Page
             ->pluck('id')
             ->mapWithKeys(fn (int $id) => [$id => in_array($id, $preferred_ids, true)])
             ->all();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona "Fabricantes habilitados"';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Marque aqui os fabricantes que você realmente trabalha — só esses vão aparecer nas suas buscas e nos pedidos dos seus clientes, filtrando o que não interessa pro seu negócio.</p>';
     }
 
     /**

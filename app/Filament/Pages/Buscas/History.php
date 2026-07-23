@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Buscas;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Models\SearchHistory;
 use App\Models\SearchHistory\Enums\Method;
 use BackedEnum;
@@ -17,6 +18,7 @@ use UnitEnum;
 
 class History extends Page implements HasTable
 {
+    use HasHelpAction;
     use InteractsWithTable;
 
     protected string $view = 'filament.pages.buscas.history';
@@ -31,10 +33,39 @@ class History extends Page implements HasTable
 
     protected static ?string $title = 'Histórico';
 
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona o Histórico';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Toda busca feita na Base de dados ou na API fica registrada aqui, com as suas 100 mais recentes.</p>'.
+            '<p>Clique em qualquer linha pra repetir a busca com o mesmo termo.</p>';
+    }
+
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => SearchHistory::query()->where('user_id', Auth::id()))
+            ->query(function (): Builder {
+                // ->limit() sozinho não dá porque o Filament acrescenta o próprio
+                // limit/offset da paginação em cima da query — o de baixo sempre vence,
+                // então o limite de 100 nunca chegaria a valer. Restringindo pelos IDs
+                // dos 100 mais recentes primeiro, a paginação por cima passa a operar só
+                // dentro desse conjunto já limitado.
+                $recentIds = SearchHistory::query()
+                    ->where('user_id', Auth::id())
+                    ->orderByDesc('created_at')
+                    ->limit(100)
+                    ->pluck('id');
+
+                return SearchHistory::query()->whereIn('id', $recentIds);
+            })
             ->recordUrl(fn (SearchHistory $record): string => match ($record->method) {
                 Method::Api => Api::getUrl(['codigo' => $record->query]),
                 Method::Database => CatalogDatabaseSearch::getUrl(['codigo' => $record->query]),

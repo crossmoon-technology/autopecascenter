@@ -32,12 +32,13 @@ class CatalogsTable
                     ? '3s'
                     : null)
             ->columns([
-                ImageColumn::make('manufacturer.logo')
+                ImageColumn::make('manufacturer.icon')
                     ->disk('public')
-                    ->imageHeight(15)
+                    ->imageHeight(25)
                     ->label('Fabricante')
                     ->alignCenter(),
                 TextColumn::make('name')
+                    ->label('Nome')
                     ->searchable()
                     ->alignLeft(),
                 TextColumn::make('descricao')
@@ -46,6 +47,7 @@ class CatalogsTable
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignLeft(),
                 TextColumn::make('extracted_at')
+                    ->label('Extraído em')
                     ->date()
                     ->sortable()
                     ->alignCenter(),
@@ -63,16 +65,19 @@ class CatalogsTable
                     })
                     ->alignCenter(),
                 TextColumn::make('deleted_at')
+                    ->label('Excluído em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignCenter(),
                 TextColumn::make('created_at')
+                    ->label('Criado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignCenter(),
                 TextColumn::make('updated_at')
+                    ->label('Atualizado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)

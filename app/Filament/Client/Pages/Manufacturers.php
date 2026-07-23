@@ -2,6 +2,7 @@
 
 namespace App\Filament\Client\Pages;
 
+use App\Filament\Client\Pages\Concerns\ScopesManufacturersToInvitingSeller;
 use App\Models\Manufacturer;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 class Manufacturers extends Page
 {
+    use ScopesManufacturersToInvitingSeller;
+
     protected string $view = 'filament.client.pages.manufacturers';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
@@ -20,11 +23,11 @@ class Manufacturers extends Page
 
     protected static ?string $title = 'Fabricantes';
 
+    /**
+     * @return Collection<int, Manufacturer>
+     */
     public function getManufacturers(): Collection
     {
-        return Manufacturer::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return $this->manufacturersScopedToInvitingSeller();
     }
 }

@@ -19,11 +19,16 @@ class AuthService
         return Auth::attempt($request->only('email', 'password'), $request->boolean('remember'));
     }
 
+    /**
+     * O cadastro público (`/registrar`) é pra lojas/vendedores se inscreverem na
+     * plataforma — por isso role = Admin. Contas Role::Client são criadas só pelo fluxo
+     * de convite (ver OrderLinkController), nunca por aqui.
+     */
     public function register(RegisterRequest $request): User
     {
         $user = User::create([
             ...$request->only('name', 'email', 'document', 'password', 'registration_ip'),
-            'role' => Role::Client,
+            'role' => Role::Admin,
         ]);
 
         Auth::login($user);

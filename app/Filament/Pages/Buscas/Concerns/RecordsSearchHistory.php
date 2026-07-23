@@ -14,10 +14,16 @@ trait RecordsSearchHistory
      */
     protected function recordSearchHistory(string $query, Method $method, ?bool $found_results = null): void
     {
-        Auth::user()->searchHistory()->create([
+        $user = Auth::user();
+
+        $user->searchHistory()->create([
             'query' => $query,
             'method' => $method,
             'found_results' => $found_results,
         ]);
+
+        $idsToKeep = $user->searchHistory()->orderByDesc('created_at')->limit(100)->pluck('id');
+
+        $user->searchHistory()->whereNotIn('id', $idsToKeep)->delete();
     }
 }

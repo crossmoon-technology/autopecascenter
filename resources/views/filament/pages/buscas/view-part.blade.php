@@ -81,7 +81,7 @@
         }
         .vp-action-btn:hover {
             opacity: 1;
-            border-color: rgb(37 99 235);
+            border-color: rgb(249 70 3);
         }
         .vp-action-btn svg {
             width: 1.125rem;
@@ -180,7 +180,7 @@
             font-size: 0.75rem;
             font-family: ui-monospace, monospace;
             word-break: break-all;
-            color: rgb(37 99 235);
+            color: rgb(249 70 3);
             text-decoration: none;
         }
         .vp-share-url:hover {
