@@ -104,4 +104,26 @@ class HistoryPageTest extends TestCase
 
         $this->assertSame(Api::getUrl(['codigo' => 'HF-21']), $url);
     }
+
+    public function test_only_shows_the_100_most_recent_searches(): void
+    {
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $this->actingAs($user);
+
+        foreach (range(1, 105) as $i) {
+            $record = SearchHistory::factory()->create([
+                'user_id' => $user->id,
+                'query' => "codigo-{$i}",
+            ]);
+            $record->timestamps = false;
+            $record->created_at = now()->subMinutes(200 - $i);
+            $record->save();
+        }
+
+        $records = Livewire::test(History::class)->instance()->getTable()->getRecords();
+
+        $this->assertSame(100, $records->total());
+        $this->assertTrue($records->contains('query', 'codigo-105'));
+        $this->assertFalse($records->contains('query', 'codigo-1'));
+    }
 }

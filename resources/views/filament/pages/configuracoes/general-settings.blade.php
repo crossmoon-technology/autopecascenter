@@ -8,7 +8,7 @@
             padding: 0.5rem 1rem;
             border: none;
             border-radius: 0.5rem;
-            background-color: rgb(37 99 235);
+            background-color: rgb(249 70 3);
             color: #fff;
             font-size: 0.875rem;
             font-weight: 600;
@@ -17,7 +17,7 @@
             transition: background-color 0.15s ease;
         }
         .gs-save-button:hover {
-            background-color: rgb(29 78 216);
+            background-color: rgb(199 56 2);
         }
     </style>
 

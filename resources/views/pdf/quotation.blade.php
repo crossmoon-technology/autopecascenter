@@ -119,6 +119,7 @@
             <tr>
                 <th>Fabricante</th>
                 <th>Código</th>
+                <th>Qtd.</th>
                 <th>Nota</th>
             </tr>
         </thead>
@@ -127,6 +128,7 @@
                 <tr>
                     <td>{{ $row['Fabricante'] ?? '—' }}</td>
                     <td class="codigo">{{ $row['Código'] }}</td>
+                    <td>{{ $row['Quantidade'] }}</td>
                     <td class="nota">{{ $row['Nota'] ?? '—' }}</td>
                 </tr>
             @endforeach

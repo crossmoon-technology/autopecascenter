@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Buscas;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch\Enums\SearchType;
 use App\Filament\Pages\Buscas\Concerns\AddsToQuotation;
 use App\Filament\Pages\Buscas\Concerns\ManagesFavoriteLists;
@@ -32,6 +33,7 @@ use UnitEnum;
 class CatalogDatabaseSearch extends Page implements HasActions, HasForms
 {
     use AddsToQuotation;
+    use HasHelpAction;
     use InteractsWithActions;
     use InteractsWithForms;
     use ManagesFavoriteLists;
@@ -98,6 +100,22 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
 
         $this->favoritedPartIds = Auth::user()->favoritedPartIds()->all();
         $this->quotedPartIds = $this->currentlyQuotedPartIds();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona a Base de dados';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Aqui a busca é feita direto nos catálogos e peças já cadastrados na nossa base — escolha o tipo de busca (código, equivalentes ou atributos), os fabricantes e digite o termo.</p>'.
+            '<p>Os resultados aparecem na hora. Dá pra favoritar uma peça (estrela) ou adicionar direto à cotação, sem sair da página.</p>';
     }
 
     public function form(Schema $schema): Schema

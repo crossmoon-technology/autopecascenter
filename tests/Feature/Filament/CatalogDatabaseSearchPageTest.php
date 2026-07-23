@@ -146,6 +146,35 @@ class CatalogDatabaseSearchPageTest extends TestCase
         ]);
     }
 
+    public function test_search_deletes_the_oldest_history_entry_once_the_user_has_100(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $this->actingAs($user);
+
+        $oldest = null;
+
+        foreach (range(1, 100) as $i) {
+            $record = SearchHistory::factory()->create(['user_id' => $user->id, 'query' => "codigo-{$i}"]);
+            $record->timestamps = false;
+            $record->created_at = now()->subMinutes(200 - $i);
+            $record->save();
+
+            if ($i === 1) {
+                $oldest = $record;
+            }
+        }
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => '16088'])
+            ->call('search');
+
+        $this->assertSame(100, SearchHistory::query()->where('user_id', $user->id)->count());
+        $this->assertDatabaseMissing('search_histories', ['id' => $oldest->id]);
+        $this->assertDatabaseHas('search_histories', ['user_id' => $user->id, 'query' => '16088']);
+    }
+
     public function test_search_without_a_selected_manufacturer_is_not_recorded_in_history(): void
     {
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);

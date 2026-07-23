@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Esqueci a senha — {{ config('app.name') }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/scss/app.scss'])
 </head>
 
@@ -16,7 +17,7 @@
 
             <div class="forgot-card__header">
                 <a href="{{ url('/') }}" class="forgot-card__logo">
-                    <img src="{{ asset('images/autopecascenter-logo.png') }}" alt="{{ config('app.name') }}">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
                 </a>
                 <h1 class="forgot-card__title">Esqueceu a senha?</h1>
                 <p class="forgot-card__subtitle">Informe seu e-mail e enviaremos um link para redefinir sua senha.</p>

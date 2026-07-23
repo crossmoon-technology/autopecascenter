@@ -34,14 +34,14 @@
         }
         .pe-manufacturer-chip-active {
             opacity: 1;
-            border-color: rgb(37 99 235);
-            background: rgba(37, 99, 235, 0.1);
+            border-color: rgb(249 70 3);
+            background: rgba(249, 70, 3, 0.1);
         }
         .pe-manufacturer-chip-active:hover {
             opacity: 1;
         }
         .pe-manufacturer-chip:focus-visible {
-            outline: 2px solid rgb(37 99 235);
+            outline: 2px solid rgb(249 70 3);
             outline-offset: 2px;
         }
         .pe-manufacturer-chip-icon {
@@ -185,7 +185,7 @@
         }
         .pe-part-action-btn:hover {
             opacity: 1;
-            border-color: rgb(37 99 235);
+            border-color: rgb(249 70 3);
         }
         .pe-part-action-btn svg {
             width: 0.875rem;
@@ -243,10 +243,10 @@
         .pe-tab-active {
             opacity: 1;
             font-weight: 600;
-            background: rgba(37, 99, 235, 0.12);
-            border-color: rgb(37 99 235);
+            background: rgba(249, 70, 3, 0.12);
+            border-color: rgb(249 70 3);
             border-bottom: 1px solid transparent;
-            color: rgb(37 99 235);
+            color: rgb(249 70 3);
         }
         .pe-tab-name {
             overflow: hidden;
@@ -275,7 +275,7 @@
             padding: 0.5rem 1rem;
             border: none;
             border-radius: 0.5rem;
-            background-color: rgb(37 99 235);
+            background-color: rgb(249 70 3);
             color: #fff;
             font-size: 0.875rem;
             font-weight: 600;
@@ -284,7 +284,7 @@
             transition: background-color 0.15s ease, opacity 0.15s ease;
         }
         .pe-search-button:hover:not(:disabled) {
-            background-color: rgb(29 78 216);
+            background-color: rgb(199 56 2);
         }
         .pe-search-button:disabled {
             cursor: not-allowed;

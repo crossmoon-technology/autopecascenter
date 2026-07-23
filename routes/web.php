@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OrderLinkController;
 use App\Http\Controllers\PublicPartController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,14 @@ Route::get('/planos', function () {
 Route::get('/contato', function () {
     return view('contato');
 })->name('contato');
+
+Route::get('/pedido/{orderLink:token}', [OrderLinkController::class, 'show'])
+    ->name('order-links.show')
+    ->middleware('throttle:60,1');
+
+Route::post('/pedido/{orderLink:token}', [OrderLinkController::class, 'store'])
+    ->name('order-links.store')
+    ->middleware('throttle:20,1');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

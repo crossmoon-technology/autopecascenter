@@ -5,12 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Entrar — {{ config('app.name') }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 </head>
 
 <body>
 
     <a href="{{ url('/') }}">
-        <img src="{{ asset('images/autopecascenter-logo.png') }}" alt="{{ config('app.name') }}">
+        <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
     </a>
     <h1>Bem-vindo de volta</h1>
     <p>Acesse sua conta para continuar</p>

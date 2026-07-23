@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Support\Facades\Vite;
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
     {
         FilamentAsset::register([
             Js::make('informativo-preview', Vite::asset('resources/js/informativo-preview.js'))->module(),
+            Js::make('onboarding-tour', Vite::asset('resources/js/onboarding-tour.js'))->module(),
+            Css::make('onboarding-tour', Vite::asset('resources/css/onboarding-tour.css')),
         ]);
     }
 }

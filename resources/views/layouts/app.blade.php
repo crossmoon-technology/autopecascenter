@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Auto Peças Center</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo2.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 

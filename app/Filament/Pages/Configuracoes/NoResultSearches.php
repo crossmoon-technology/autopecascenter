@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Configuracoes;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Models\SearchHistory;
 use App\Models\SearchHistory\Enums\Method;
 use BackedEnum;
@@ -16,6 +17,7 @@ use UnitEnum;
 
 class NoResultSearches extends Page implements HasTable
 {
+    use HasHelpAction;
     use InteractsWithTable;
 
     protected string $view = 'filament.pages.configuracoes.no-result-searches';
@@ -36,6 +38,22 @@ class NoResultSearches extends Page implements HasTable
      * Base de dados grava de forma confiável se a busca achou algo ou não (a API
      * responde de forma assíncrona), então é a única fonte aqui por enquanto.
      */
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona "Buscas sem resultado"';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Lista de termos que foram buscados na Base de dados e não encontraram nada — de todos os usuários, não só você.</p>'.
+            '<p>Útil pra saber quais peças vale a pena cadastrar.</p>';
+    }
+
     public function table(Table $table): Table
     {
         return $table

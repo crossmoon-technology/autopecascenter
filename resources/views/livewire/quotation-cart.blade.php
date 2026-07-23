@@ -159,7 +159,7 @@
                 @foreach ($items as $item)
                     <div class="qc-item" wire:key="qc-item-{{ $item->id }}">
                         <div class="qc-item-body">
-                            <span class="qc-item-codigo">{{ $item->codigo }}</span>
+                            <span class="qc-item-codigo">{{ $item->quantity }}x {{ $item->codigo }}</span>
                             @if ($item->manufacturer)
                                 <span class="qc-item-meta">{{ $item->manufacturer->name }}</span>
                             @endif

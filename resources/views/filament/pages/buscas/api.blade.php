@@ -28,14 +28,14 @@
         }
         .ps-manufacturer-chip-active {
             opacity: 1;
-            border-color: rgb(37 99 235);
-            background: rgba(37, 99, 235, 0.1);
+            border-color: rgb(249 70 3);
+            background: rgba(249, 70, 3, 0.1);
         }
         .ps-manufacturer-chip-active:hover {
             opacity: 1;
         }
         .ps-manufacturer-chip:focus-visible {
-            outline: 2px solid rgb(37 99 235);
+            outline: 2px solid rgb(249 70 3);
             outline-offset: 2px;
         }
         .ps-manufacturer-chip-icon {
@@ -67,7 +67,7 @@
             padding: 0.5rem 1rem;
             border: none;
             border-radius: 0.5rem;
-            background-color: rgb(37 99 235);
+            background-color: rgb(249 70 3);
             color: #fff;
             font-size: 0.875rem;
             font-weight: 600;
@@ -76,7 +76,7 @@
             transition: background-color 0.15s ease, opacity 0.15s ease;
         }
         .ps-search-button:hover:not(:disabled) {
-            background-color: rgb(29 78 216);
+            background-color: rgb(199 56 2);
         }
         .ps-search-button:disabled {
             cursor: not-allowed;
@@ -123,10 +123,10 @@
         .ps-tab-active {
             opacity: 1;
             font-weight: 600;
-            background: rgba(37, 99, 235, 0.12);
-            border-color: rgb(37 99 235);
+            background: rgba(249, 70, 3, 0.12);
+            border-color: rgb(249 70 3);
             border-bottom: 1px solid transparent;
-            color: rgb(37 99 235);
+            color: rgb(249 70 3);
         }
         .ps-tab-name {
             overflow: hidden;
@@ -234,7 +234,7 @@
         }
         .ps-card-link {
             font-size: 0.75rem;
-            color: rgb(37 99 235);
+            color: rgb(249 70 3);
             text-decoration: none;
             margin-top: 0.25rem;
         }
@@ -267,7 +267,7 @@
         }
         .ps-card-action-btn:hover {
             opacity: 1;
-            border-color: rgb(37 99 235);
+            border-color: rgb(249 70 3);
         }
         .ps-card-action-btn svg {
             width: 0.875rem;
@@ -423,7 +423,7 @@
                             @if ($status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Loading)
                                 <x-filament::icon
                                     icon="heroicon-o-arrow-path"
-                                    style="width: 1rem; height: 1rem; flex-shrink: 0; color: #3b82f6; animation: spin 2.5s linear infinite;"
+                                    style="width: 1rem; height: 1rem; flex-shrink: 0; color: #F94603; animation: spin 2.5s linear infinite;"
                                 />
                             @elseif ($status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Success)
                                 <x-filament::icon
@@ -455,7 +455,7 @@
                     >
                         @if ($status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Loading)
                             <div style="display: flex; align-items: center; gap: 0.625rem;">
-                                <x-filament::loading-indicator style="width: 1.25rem; height: 1.25rem; color: rgb(37 99 235);" />
+                                <x-filament::loading-indicator style="width: 1.25rem; height: 1.25rem; color: rgb(249 70 3);" />
                                 <p class="ps-notice">Buscando em {{ $manufacturer->name }}…</p>
                             </div>
                         @elseif ($status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Failed)

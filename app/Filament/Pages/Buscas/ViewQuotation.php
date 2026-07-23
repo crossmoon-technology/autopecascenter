@@ -36,7 +36,7 @@ class ViewQuotation extends Page implements HasTable
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShoppingCart;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Buscas';
+    protected static string|UnitEnum|null $navigationGroup = 'Vendas';
 
     public Quotation $currentQuotation;
 
@@ -64,6 +64,9 @@ class ViewQuotation extends Page implements HasTable
                 TextColumn::make('codigo')
                     ->label('Código')
                     ->searchable(),
+                TextColumn::make('quantity')
+                    ->label('Qtd.')
+                    ->alignCenter(),
                 TextColumn::make('descricao')
                     ->label('Descrição')
                     ->placeholder('—')
@@ -141,21 +144,33 @@ class ViewQuotation extends Page implements HasTable
             ])
             ->recordActions([
                 Action::make('editNote')
-                    ->label('Nota')
+                    ->label('Editar')
                     ->icon(Heroicon::OutlinedPencilSquare)
                     ->color('gray')
-                    ->fillForm(fn (QuotationItem $record): array => ['note' => $record->note])
+                    ->fillForm(fn (QuotationItem $record): array => [
+                        'quantity' => $record->quantity,
+                        'note' => $record->note,
+                    ])
                     ->schema([
+                        TextInput::make('quantity')
+                            ->label('Quantidade')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->required(),
                         Textarea::make('note')
                             ->label('Nota')
                             ->placeholder('Ex: cliente pede sempre essa, combinar preço...')
                             ->rows(3),
                     ])
                     ->action(function (QuotationItem $record, array $data): void {
-                        $record->update(['note' => $data['note']]);
+                        $record->update([
+                            'quantity' => $data['quantity'],
+                            'note' => $data['note'],
+                        ]);
 
                         Notification::make()
-                            ->title('Nota salva.')
+                            ->title('Item atualizado.')
                             ->success()
                             ->send();
                     }),

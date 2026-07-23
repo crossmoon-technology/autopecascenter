@@ -15,9 +15,9 @@ class QuotationsPageTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_page_lives_under_the_buscas_navigation_group(): void
+    public function test_page_lives_under_the_vendas_navigation_group(): void
     {
-        $this->assertSame('Buscas', Quotations::getNavigationGroup());
+        $this->assertSame('Vendas', Quotations::getNavigationGroup());
     }
 
     public function test_shows_an_empty_state_when_the_user_has_no_saved_quotations_yet(): void

@@ -2,27 +2,34 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Ajuda\Faq;
 use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
 use App\Filament\Pages\Buscas\Favorites;
+use App\Filament\Pages\Buscas\GuidedQuotation;
 use App\Filament\Pages\Buscas\History;
 use App\Filament\Pages\Buscas\Iframes;
+use App\Filament\Pages\Buscas\OrderLinks;
+use App\Filament\Pages\Buscas\Orders;
 use App\Filament\Pages\Buscas\Quotations;
 use App\Filament\Pages\Buscas\ViewFavoriteList;
+use App\Filament\Pages\Buscas\ViewOrderLink;
 use App\Filament\Pages\Buscas\ViewPart;
 use App\Filament\Pages\Buscas\ViewQuotation;
 use App\Filament\Pages\Configuracoes\GeneralSettings;
 use App\Filament\Pages\Configuracoes\ManufacturerPreferences;
 use App\Filament\Pages\Configuracoes\NoResultSearches;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\Perfil\ViewProfile;
 use App\Filament\Resources\Catalogs\CatalogResource;
 use App\Filament\Resources\Informativos\InformativoResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
+use App\Filament\Widgets\OrdersOverview;
 use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -52,13 +59,18 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Auto Peças Center')
             ->brandLogo(fn () => view('filament.brand-logo'))
             ->brandLogoHeight('2rem')
-            ->favicon(asset('images/apc-favicon.svg'))
+            ->favicon(asset('favicon.ico'))
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                fn (): string => Blade::render('<livewire:quotation-cart />'),
+                fn (): string => Blade::render('<livewire:pending-orders-indicator /><livewire:quotation-cart /><livewire:help-menu />'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => Blade::render('<livewire:lgpd-consent /><livewire:onboarding-tutorial />'),
             )
             ->navigationGroups([
                 'Buscas',
+                'Vendas',
                 'Configurações',
             ])
             ->resources([
@@ -71,6 +83,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
                 Dashboard::class,
+                Faq::class,
                 Iframes::class,
                 CatalogDatabaseSearch::class,
                 Api::class,
@@ -79,13 +92,19 @@ class AdminPanelProvider extends PanelProvider
                 ViewFavoriteList::class,
                 Quotations::class,
                 ViewQuotation::class,
+                OrderLinks::class,
+                ViewOrderLink::class,
+                Orders::class,
+                GuidedQuotation::class,
                 ViewPart::class,
                 ManufacturerPreferences::class,
                 NoResultSearches::class,
                 GeneralSettings::class,
+                ViewProfile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
+                OrdersOverview::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])

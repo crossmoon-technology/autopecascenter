@@ -16,7 +16,7 @@ class QuotationExporter
     /**
      * @var array<int, string>
      */
-    private const array COLUMNS = ['Fabricante', 'Código', 'Nota'];
+    private const array COLUMNS = ['Fabricante', 'Código', 'Quantidade', 'Nota'];
 
     public function toPdf(Quotation $quotation): string
     {
@@ -63,7 +63,7 @@ class QuotationExporter
 
         $sheet->fromArray($rows, null, 'A2');
 
-        foreach (range('A', 'C') as $column) {
+        foreach (range('A', 'D') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -134,6 +134,7 @@ class QuotationExporter
             ->map(fn (QuotationItem $item): array => [
                 'Fabricante' => $item->manufacturer?->name,
                 'Código' => $item->codigo,
+                'Quantidade' => (string) $item->quantity,
                 'Nota' => $item->note,
             ]);
     }

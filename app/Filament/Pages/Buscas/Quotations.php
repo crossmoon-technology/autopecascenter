@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Buscas;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Models\Quotation;
 use App\Models\Quotation\Enums\Status;
 use BackedEnum;
@@ -19,15 +20,16 @@ use UnitEnum;
 
 class Quotations extends Page implements HasTable
 {
+    use HasHelpAction;
     use InteractsWithTable;
 
     protected string $view = 'filament.pages.buscas.quotations';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShoppingCart;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Buscas';
+    protected static string|UnitEnum|null $navigationGroup = 'Vendas';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $navigationLabel = 'Cotações';
 
@@ -39,6 +41,22 @@ class Quotations extends Page implements HasTable
      * App\Livewire\QuotationCart). Reabrir uma cotação daqui tira ela da lista de novo,
      * já que volta a ser "a aberta".
      */
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona a página de Cotações';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Cotações que você monta ficam aqui — adicione peças pelas páginas de busca (Iframes, Base de dados, API) e elas vão se acumulando na cotação em aberto (o carrinho, no topbar).</p>'.
+            '<p>Quando terminar, feche a cotação e exporte em PDF, CSV ou planilha pra enviar ao cliente.</p>';
+    }
+
     public function table(Table $table): Table
     {
         return $table

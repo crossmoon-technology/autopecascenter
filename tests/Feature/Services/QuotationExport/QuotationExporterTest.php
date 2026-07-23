@@ -67,11 +67,11 @@ class QuotationExporterTest extends TestCase
         $csv = app(QuotationExporter::class)->toCsv($quotation);
 
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
-        $this->assertStringContainsString('Fabricante,Código,Nota', $csv);
-        $this->assertStringContainsString('Cofap,HF-21,"Cliente pediu urgência"', $csv);
+        $this->assertStringContainsString('Fabricante,Código,Quantidade,Nota', $csv);
+        $this->assertStringContainsString('Cofap,HF-21,4,"Cliente pediu urgência"', $csv);
     }
 
-    public function test_to_json_encodes_only_fabricante_codigo_and_nota(): void
+    public function test_to_json_encodes_fabricante_codigo_quantidade_and_nota(): void
     {
         $quotation = $this->quotationWithOneItem();
 
@@ -79,9 +79,10 @@ class QuotationExporterTest extends TestCase
         $decoded = json_decode($json, true);
 
         $this->assertCount(1, $decoded);
-        $this->assertSame(['Fabricante', 'Código', 'Nota'], array_keys($decoded[0]));
+        $this->assertSame(['Fabricante', 'Código', 'Quantidade', 'Nota'], array_keys($decoded[0]));
         $this->assertSame('Cofap', $decoded[0]['Fabricante']);
         $this->assertSame('HF-21', $decoded[0]['Código']);
+        $this->assertSame('4', $decoded[0]['Quantidade']);
         $this->assertSame('Cliente pediu urgência', $decoded[0]['Nota']);
     }
 
@@ -99,6 +100,7 @@ class QuotationExporterTest extends TestCase
         $this->assertSame('Fabricante', $sheet->getCell('A1')->getValue());
         $this->assertSame('Cofap', $sheet->getCell('A2')->getValue());
         $this->assertSame('HF-21', $sheet->getCell('B2')->getValue());
+        $this->assertEquals(4, $sheet->getCell('C2')->getValue());
 
         unlink($tmpFile);
     }
@@ -112,6 +114,7 @@ class QuotationExporterTest extends TestCase
             'manufacturer_id' => $manufacturer->id,
             'source' => Source::Iframe,
             'codigo' => 'HF-21',
+            'quantity' => 4,
             'descricao' => 'MOLA A GÁS',
             'note' => 'Cliente pediu urgência',
         ]);

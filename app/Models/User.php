@@ -11,6 +11,7 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,7 +20,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 
-#[Fillable(['role', 'name', 'email', 'document', 'password', 'logo', 'registration_ip'])]
+#[Fillable(['role', 'name', 'email', 'document', 'password', 'logo', 'registration_ip', 'invited_by_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -32,7 +33,39 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
+            'tutorial_completed_at' => 'datetime',
+            'lgpd_accepted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * tutorial_completed_at é gerenciado só pelo próprio tutorial (ver App\Livewire\OnboardingTutorial)
+     * — de propósito fora do Fillable, pra não virar algo setável via formulário.
+     */
+    public function needsTutorial(): bool
+    {
+        return $this->tutorial_completed_at === null;
+    }
+
+    public function markTutorialCompleted(): void
+    {
+        $this->forceFill(['tutorial_completed_at' => now()])->save();
+    }
+
+    /**
+     * lgpd_accepted_at é gerenciado só pelo próprio modal de consentimento (ver
+     * App\Livewire\LgpdConsent) — de propósito fora do Fillable, pra não virar algo
+     * setável via formulário. O tutorial (ver needsTutorial() acima) só começa depois
+     * desse aceite — ver App\Livewire\OnboardingTutorial::mount()/startAfterLgpdConsent().
+     */
+    public function needsLgpdConsent(): bool
+    {
+        return $this->lgpd_accepted_at === null;
+    }
+
+    public function acceptLgpd(): void
+    {
+        $this->forceFill(['lgpd_accepted_at' => now()])->save();
     }
 
     public function preferredManufacturers(): BelongsToMany
@@ -112,6 +145,34 @@ class User extends Authenticatable implements FilamentUser
     public function openQuotation(): Quotation
     {
         return $this->openQuotationOrNull() ?? $this->quotations()->create(['status' => Status::Open]);
+    }
+
+    public function orderLinks(): HasMany
+    {
+        return $this->hasMany(OrderLink::class);
+    }
+
+    /**
+     * O vendedor que gerou o link de cadastro usado por essa conta — só preenchido pra
+     * contas Role::Client criadas por um link, nulo pra qualquer outra conta.
+     */
+    public function invitedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by_id');
+    }
+
+    public function invitedClients(): HasMany
+    {
+        return $this->hasMany(User::class, 'invited_by_id');
+    }
+
+    /**
+     * Histórico de pedidos enviados por essa conta convidada — pode enviar vários ao
+     * longo do tempo, não só um.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 
     public function canAccessPanel(Panel $panel): bool

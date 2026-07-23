@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Buscas;
 
+use App\Filament\Concerns\HasHelpAction;
 use App\Filament\Pages\Buscas\Concerns\AddsToQuotation;
 use App\Filament\Pages\Buscas\Concerns\ResolvesPreferredManufacturers;
 use App\Models\Manufacturer;
@@ -16,6 +17,7 @@ use UnitEnum;
 class Iframes extends Page
 {
     use AddsToQuotation;
+    use HasHelpAction;
     use ResolvesPreferredManufacturers;
 
     protected string $view = 'filament.pages.buscas.iframes';
@@ -38,6 +40,22 @@ class Iframes extends Page
     public function mount(): void
     {
         $this->manufacturers = $this->defaultManufacturerSelection($this->manufacturersWithIframe());
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->helpAction()];
+    }
+
+    protected function helpTitle(): string
+    {
+        return 'Como funciona a busca por Iframes';
+    }
+
+    protected function helpDescription(): string
+    {
+        return '<p>Aqui você busca direto no site de cada fabricante (ex: Cofap, Hipper Freios), sem sair do painel — escolha os fabricantes no topo e a página de busca deles carrega logo abaixo.</p>'.
+            '<p>Como o conteúdo vem de fora, não dá pra ler o resultado automaticamente: depois de achar a peça no site do fabricante, digite o código manualmente pra adicionar à cotação.</p>';
     }
 
     /**
