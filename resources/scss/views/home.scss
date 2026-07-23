@@ -7,75 +7,6 @@ html > body > main {
     min-height: calc(100vh - #{variables.$height-header});
 }
 
-.text-accent {
-    color: colors.$color-accent;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-family: typography.$font-family-base;
-    font-size: typography.$font-size-sm;
-    font-weight: typography.$font-weight-semibold;
-    border-radius: 8px;
-    padding: 0.9rem 1.75rem;
-    white-space: nowrap;
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease;
-
-    svg {
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-    }
-
-    &--solid {
-        color: colors.$color-white;
-        background-color: colors.$color-accent;
-        border: 1px solid colors.$color-accent;
-
-        &:hover {
-            background-color: colors.$color-accent-dark;
-            border-color: colors.$color-accent-dark;
-        }
-    }
-
-    &--play {
-        color: colors.$color-text;
-        background-color: transparent;
-        padding-left: 0;
-
-        &:hover {
-            color: colors.$color-accent;
-        }
-    }
-
-    &--block {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-}
-
-.btn__play-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: colors.$color-gray-light;
-    color: colors.$color-text;
-
-    svg {
-        width: 14px;
-        height: 14px;
-    }
-}
-
 // ---------------------------------------------------------------------------
 // Hero
 // ---------------------------------------------------------------------------
@@ -143,8 +74,8 @@ html > body > main {
 // Browser mockup -------------------------------------------------------------
 
 .browser-mock {
-    background-color: colors.$color-white;
-    border: 1px solid colors.$color-border;
+    background-color: colors.$color-header-bg;
+    border: 1px solid colors.$color-border-light;
     border-radius: 12px;
     box-shadow: 0 20px 45px rgba(26, 26, 46, 0.12);
     overflow: hidden;
@@ -154,7 +85,8 @@ html > body > main {
         align-items: center;
         gap: 0.4rem;
         padding: 0.75rem 1rem;
-        border-bottom: 1px solid colors.$color-border;
+        background-color: colors.$color-card-bg;
+        border-bottom: 1px solid colors.$color-border-light;
     }
 
     .browser-mock__dot {
@@ -179,7 +111,7 @@ html > body > main {
         margin-left: 0.75rem;
         font-family: typography.$font-family-base;
         font-size: typography.$font-size-xs;
-        color: colors.$color-gray-dark;
+        color: colors.$color-gray;
     }
 
     .browser-mock__address {
@@ -187,75 +119,8 @@ html > body > main {
         align-items: center;
         gap: 0.6rem;
         padding: 0.5rem 1rem;
-        border-bottom: 1px solid colors.$color-border;
-        color: colors.$color-gray;
-
-        svg {
-            width: 14px;
-            height: 14px;
-            flex-shrink: 0;
-        }
-
-        span {
-            font-family: typography.$font-family-base;
-            font-size: typography.$font-size-xs;
-            color: colors.$color-gray-dark;
-        }
-    }
-
-    .browser-mock__body {
-        display: flex;
-    }
-
-    .browser-mock__sidebar {
-        width: 150px;
-        flex-shrink: 0;
         background-color: colors.$color-header-bg;
-        padding: 1.25rem 0.85rem;
-
-        nav {
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-        }
-    }
-
-    .browser-mock__logo {
-        display: block;
-        font-family: typography.$font-family-base;
-        font-size: typography.$font-size-sm;
-        font-weight: typography.$font-weight-extrabold;
-        color: colors.$color-white;
-        margin-bottom: 1.25rem;
-    }
-
-    .browser-mock__nav-item {
-        font-family: typography.$font-family-base;
-        font-size: typography.$font-size-xs;
-        color: colors.$color-gray;
-        padding: 0.4rem 0.6rem;
-        border-radius: 4px;
-
-        &--active {
-            background-color: colors.$color-accent;
-            color: colors.$color-white;
-        }
-    }
-
-    .browser-mock__main {
-        flex: 1;
-        min-width: 0;
-        padding: 1.25rem;
-    }
-
-    .browser-mock__search {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        border: 1px solid colors.$color-border;
-        border-radius: 6px;
-        padding: 0.6rem 0.85rem;
-        margin-bottom: 1.25rem;
+        border-bottom: 1px solid colors.$color-border-light;
         color: colors.$color-gray;
 
         svg {
@@ -267,68 +132,14 @@ html > body > main {
         span {
             font-family: typography.$font-family-base;
             font-size: typography.$font-size-xs;
-        }
-    }
-
-    .browser-mock__stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .browser-mock__stat {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-        border: 1px solid colors.$color-border;
-        border-radius: 6px;
-        padding: 0.6rem 0.75rem;
-
-        strong {
-            font-family: typography.$font-family-base;
-            font-size: typography.$font-size-md;
-            font-weight: typography.$font-weight-bold;
-            color: colors.$color-text;
-        }
-
-        span {
-            font-family: typography.$font-family-base;
-            font-size: 0.65rem;
             color: colors.$color-gray;
         }
     }
 
-    .browser-mock__table {
-        border: 1px solid colors.$color-border;
-        border-radius: 6px;
-        overflow: hidden;
-    }
-
-    .browser-mock__table-head,
-    .browser-mock__table-row {
-        display: grid;
-        grid-template-columns: 0.8fr 1.6fr 1.4fr 0.9fr 0.8fr 0.8fr;
-        gap: 0.5rem;
-        padding: 0.55rem 0.75rem;
-        font-family: typography.$font-family-base;
-        font-size: 0.65rem;
-    }
-
-    .browser-mock__table-head {
-        background-color: colors.$color-gray-light;
-        color: colors.$color-gray-dark;
-        font-weight: typography.$font-weight-semibold;
-    }
-
-    .browser-mock__table-row {
-        color: colors.$color-text;
-        border-top: 1px solid colors.$color-border;
-
-        .is-done {
-            color: #1c9d5b;
-            font-weight: typography.$font-weight-medium;
-        }
+    .browser-mock__screenshot {
+        display: block;
+        width: 100%;
+        height: auto;
     }
 }
 
@@ -392,7 +203,7 @@ html > body > main {
 
     .features__grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 1.5rem;
     }
 
@@ -615,26 +426,6 @@ html > body > main {
         margin: 1rem 0 !important;
     }
 
-    .final-cta__phone {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-family: typography.$font-family-base;
-        font-size: typography.$font-size-sm;
-        font-weight: typography.$font-weight-semibold;
-        color: colors.$color-text;
-
-        svg {
-            width: 16px;
-            height: 16px;
-            color: colors.$color-accent;
-        }
-
-        &:hover {
-            color: colors.$color-accent;
-        }
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -652,7 +443,7 @@ html > body > main {
     }
 
     .features .features__grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         row-gap: 2rem;
     }
 
@@ -677,24 +468,6 @@ html > body > main {
 @media (max-width: grid.$medium-size) {
     .hero {
         padding: 3rem 0;
-    }
-
-    .browser-mock .browser-mock__sidebar {
-        display: none;
-    }
-
-    .browser-mock .browser-mock__stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .browser-mock .browser-mock__table-head,
-    .browser-mock .browser-mock__table-row {
-        grid-template-columns: 1fr 1.6fr 1fr;
-
-        span:nth-child(3),
-        span:nth-child(5) {
-            display: none;
-        }
     }
 
     .features .features__grid {

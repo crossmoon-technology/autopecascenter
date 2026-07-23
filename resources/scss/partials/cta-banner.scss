@@ -1,0 +1,38 @@
+@use "../settings/colors";
+@use "../settings/typography";
+@use "../settings/grid";
+
+.cta-banner {
+    background-color: colors.$color-header-bg;
+    padding: 3.5rem 0;
+    border-bottom: 1px solid colors.$color-border-light;
+
+    .cta-banner__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .cta-banner__title {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-xl;
+        font-weight: typography.$font-weight-bold;
+        color: colors.$color-white;
+        margin-bottom: 0.5rem;
+    }
+
+    .cta-banner__subtitle {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-sm;
+        color: colors.$color-gray;
+    }
+
+    @media (max-width: grid.$medium-size) {
+        .cta-banner__inner {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+}

@@ -16,7 +16,7 @@
 
             <div class="login-card__header">
                 <a href="{{ url('/') }}" class="login-card__logo">
-                    <img src="{{ asset('images/autopecascenter-logo.png') }}" alt="{{ config('app.name') }}">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
                 </a>
                 <h1 class="login-card__title">Bem-vindo de volta</h1>
                 <p class="login-card__subtitle">Acesse sua conta para continuar</p>

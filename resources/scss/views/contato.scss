@@ -1,0 +1,116 @@
+@use "../settings/colors";
+@use "../settings/typography";
+@use "../settings/grid";
+
+.contact {
+    padding: 5rem 0;
+
+    .contact__inner {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 3.5rem;
+    }
+
+    .contact__form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .contact__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .contact__field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+
+        label {
+            font-family: typography.$font-family-base;
+            font-size: typography.$font-size-sm;
+            font-weight: typography.$font-weight-medium;
+            color: colors.$color-text;
+        }
+
+        input,
+        textarea {
+            font-family: typography.$font-family-base;
+            font-size: typography.$font-size-sm;
+            color: colors.$color-text;
+            border: 1px solid colors.$color-border;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+            resize: vertical;
+
+            &::placeholder {
+                color: colors.$color-gray;
+            }
+
+            &:focus {
+                border-color: colors.$color-accent;
+            }
+        }
+    }
+
+    .contact__info {
+        display: flex;
+        flex-direction: column;
+        gap: 1.75rem;
+    }
+
+    .contact__info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+
+        h3 {
+            font-family: typography.$font-family-base;
+            font-size: typography.$font-size-base;
+            font-weight: typography.$font-weight-semibold;
+            color: colors.$color-text;
+            margin-bottom: 0.25rem;
+        }
+
+        p {
+            font-family: typography.$font-family-base;
+            font-size: typography.$font-size-sm;
+            color: colors.$color-gray-dark;
+            line-height: typography.$line-height-base;
+        }
+    }
+
+    .contact__info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background-color: colors.$color-cta-bg;
+        color: colors.$color-accent;
+        flex-shrink: 0;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    @media (max-width: grid.$big-size) {
+        .contact__inner {
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+    }
+
+    @media (max-width: grid.$small-size) {
+        .contact__row {
+            grid-template-columns: 1fr;
+        }
+    }
+}

@@ -7,6 +7,18 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+Route::get('/como-funciona', function () {
+    return view('como-funciona');
+})->name('como-funciona');
+
+Route::get('/planos', function () {
+    return view('planos');
+})->name('planos');
+
+Route::get('/contato', function () {
+    return view('contato');
+})->name('contato');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt')->middleware('throttle:6,1');
