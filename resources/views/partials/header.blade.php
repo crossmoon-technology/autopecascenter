@@ -2,7 +2,7 @@
     <div class="container">
         <div class="header__inner">
             <a href="{{ route('home') }}" class="header__logo">
-                <img src="{{ asset('images/logo.png') }}" alt="Auto Peças Center">
+                <img src="{{ asset('images/white-logo.png') }}" alt="Auto Peças Center">
             </a>
 
             <input type="checkbox" id="header-nav-toggle" class="header__nav-toggle-input">

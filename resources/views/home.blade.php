@@ -47,7 +47,7 @@
                     </ul>
 
                     <div class="hero__actions">
-                        <a href="#agendar-demonstracao" class="btn btn--solid">
+                        <a href="{{ route('contato') }}" class="btn btn--solid">
                             Iniciar avaliação
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -268,7 +268,7 @@
                 <div class="final-cta__card">
                     <h3>Quer ver na prática?</h3>
                     <p>Inicie uma avaliação gratuita e conheça todo o potencial do sistema.</p>
-                    <a href="#agendar-demonstracao" class="btn btn--solid btn--block">Iniciar avaliação</a>
+                    <a href="{{ route('contato') }}" class="btn btn--solid btn--block">Iniciar avaliação</a>
                     <p class="final-cta__or">ou fale com nosso time</p>
                     <a href="{{ route('contato') }}" class="btn btn--outline btn--block final-cta__phone">
                         Entrar em contato
