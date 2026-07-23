@@ -3,7 +3,7 @@
 @use '../../settings/grid.scss' as g;
 
 .login-page {
-    background-color: c.$color-bg-darker;
+    background-color: c.$color-header-bg;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -17,7 +17,7 @@
 }
 
 .login-card {
-    background-color: c.$color-bg-dark;
+    background-color: c.$color-card-bg;
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 12px;
     padding: 2.5rem 2rem;
@@ -32,7 +32,7 @@
         margin-bottom: 1.5rem;
 
         img {
-            height: 48px;
+            height: 100px;
             width: auto;
         }
     }
@@ -60,7 +60,7 @@
             transition: color 0.2s;
 
             &:hover {
-                color: c.$color-primary;
+                color: c.$color-accent;
             }
         }
     }
@@ -116,8 +116,8 @@
         }
 
         &:focus {
-            border-color: c.$color-primary;
-            background-color: rgba(21, 101, 216, 0.06);
+            border-color: c.$color-accent;
+            background-color: rgba(242, 96, 28, 0.06);
         }
     }
 
@@ -132,10 +132,10 @@
 
         a {
             font-size: t.$font-size-sm;
-            color: c.$color-primary;
+            color: c.$color-accent;
             transition: color 0.2s;
 
-            &:hover { color: c.$color-primary-dark; }
+            &:hover { color: c.$color-accent-dark; }
         }
     }
 
@@ -153,14 +153,14 @@
     }
 
     &__checkbox {
-        accent-color: c.$color-primary;
+        accent-color: c.$color-accent;
         width: 15px;
         height: 15px;
         cursor: pointer;
     }
 
     &__submit {
-        background-color: c.$color-primary;
+        background-color: c.$color-accent;
         color: c.$color-white;
         font-family: t.$font-family-base;
         font-size: t.$font-size-base;
@@ -173,7 +173,7 @@
         margin-top: 0.25rem;
 
         &:hover {
-            background-color: c.$color-primary-dark;
+            background-color: c.$color-accent-dark;
             transform: translateY(-1px);
         }
 

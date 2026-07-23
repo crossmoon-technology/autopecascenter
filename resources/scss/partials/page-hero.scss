@@ -1,0 +1,34 @@
+@use "../settings/colors";
+@use "../settings/typography";
+@use "../settings/grid";
+
+.page-hero {
+    background-color: colors.$color-gray-light;
+    padding: 4rem 0;
+    text-align: center;
+
+    .page-hero__title {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-3xl;
+        font-weight: typography.$font-weight-extrabold;
+        color: colors.$color-text;
+        margin-bottom: 0.75rem;
+    }
+
+    .page-hero__subtitle {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-md;
+        color: colors.$color-gray-dark;
+        max-width: 40rem;
+        margin: 0 auto;
+        line-height: typography.$line-height-loose;
+    }
+
+    @media (max-width: grid.$medium-size) {
+        padding: 3rem 0;
+
+        .page-hero__title {
+            font-size: typography.$font-size-2xl;
+        }
+    }
+}

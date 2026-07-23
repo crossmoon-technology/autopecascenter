@@ -47,23 +47,9 @@
                 <h3 class="footer__heading">Navegação</h3>
                 <ul class="footer__links">
                     <li><a href="{{ route('home') }}">Home</a></li>
-                    <li><a href="#como-funciona">Como funciona</a></li>
-                    <li><a href="#vantagens">Vantagens</a></li>
-                    <li><a href="#para-sua-empresa">Para sua empresa</a></li>
-                    <li><a href="#planos">Planos</a></li>
-                    <li><a href="#contato">Contato</a></li>
-                </ul>
-            </div>
-
-            <div class="footer__column">
-                <h3 class="footer__heading">Funcionalidades</h3>
-                <ul class="footer__links">
-                    <li><a href="#">Busca inteligente</a></li>
-                    <li><a href="#">Cotação multifornecedor</a></li>
-                    <li><a href="#">Comparação de preços</a></li>
-                    <li><a href="#">Histórico de cotações</a></li>
-                    <li><a href="#">Relatórios e métricas</a></li>
-                    <li><a href="#">Integrações</a></li>
+                    <li><a href="{{ route('como-funciona') }}">Como funciona</a></li>
+                    <li><a href="{{ route('planos') }}">Planos</a></li>
+                    <li><a href="{{ route('contato') }}">Contato</a></li>
                 </ul>
             </div>
 

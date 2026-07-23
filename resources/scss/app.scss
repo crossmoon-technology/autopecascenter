@@ -2,8 +2,14 @@
 @use 'views/auth/forgot-password.scss';
 @use 'views/auth/register.scss';
 @use 'views/home.scss';
+@use 'views/como-funciona.scss';
+@use 'views/planos.scss';
+@use 'views/contato.scss';
 @use 'partials/header.scss';
 @use 'partials/footer.scss';
+@use 'partials/buttons.scss';
+@use 'partials/page-hero.scss';
+@use 'partials/cta-banner.scss';
 @use 'settings/container.scss';
 @use 'settings/grid.scss';
 @use 'settings/colors.scss';

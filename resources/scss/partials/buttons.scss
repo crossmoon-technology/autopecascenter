@@ -1,0 +1,82 @@
+@use "../settings/colors";
+@use "../settings/typography";
+
+.text-accent {
+    color: colors.$color-accent;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: typography.$font-family-base;
+    font-size: typography.$font-size-sm;
+    font-weight: typography.$font-weight-semibold;
+    border-radius: 8px;
+    padding: 0.9rem 1.75rem;
+    white-space: nowrap;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+
+    svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    &--solid {
+        color: colors.$color-white;
+        background-color: colors.$color-accent;
+        border: 1px solid colors.$color-accent;
+
+        &:hover {
+            background-color: colors.$color-accent-dark;
+            border-color: colors.$color-accent-dark;
+        }
+    }
+
+    &--outline {
+        color: colors.$color-text;
+        background-color: transparent;
+        border: 1px solid colors.$color-border;
+
+        &:hover {
+            border-color: colors.$color-accent;
+            color: colors.$color-accent;
+        }
+    }
+
+    &--play {
+        color: colors.$color-text;
+        background-color: transparent;
+        padding-left: 0;
+
+        &:hover {
+            color: colors.$color-accent;
+        }
+    }
+
+    &--block {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+.btn__play-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: colors.$color-gray-light;
+    color: colors.$color-text;
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+}
