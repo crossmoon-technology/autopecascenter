@@ -542,28 +542,6 @@ html > body > main {
         align-items: center;
     }
 
-    .final-cta__left {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 2rem;
-        align-items: center;
-    }
-
-    .final-cta__photo {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 260px;
-        border-radius: 12px;
-        background-color: colors.$color-white;
-        color: colors.$color-gray;
-
-        svg {
-            width: 72px;
-            height: 72px;
-        }
-    }
-
     .final-cta__content {
         h2 {
             font-family: typography.$font-family-base;
@@ -724,13 +702,7 @@ html > body > main {
     }
 
     .final-cta .final-cta__left {
-        grid-template-columns: 1fr;
         text-align: center;
-    }
-
-    .final-cta .final-cta__photo {
-        margin: 0 auto;
-        width: 220px;
     }
 
     .final-cta .final-cta__benefits li {
