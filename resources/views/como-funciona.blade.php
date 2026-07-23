@@ -10,16 +10,8 @@
         <section class="detailed-steps">
             <div class="container">
                 <div class="detailed-steps__item">
-                    {{-- TODO: trocar por <img src="{{ asset('images/screenshots/como-funciona-1.png') }}" alt="..."> quando o print estiver disponível --}}
-                    <div class="detailed-steps__media">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="m21 15-5-5L5 21" />
-                        </svg>
-                        <span>Print do sistema em breve</span>
-                    </div>
+                    <img src="{{ asset('images/screenshots/pecas.jpg') }}"
+                        alt="Tela de busca de peças do sistema Auto Peças Center" class="detailed-steps__media">
                     <div class="detailed-steps__content">
                         <span class="detailed-steps__badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -38,16 +30,8 @@
                 </div>
 
                 <div class="detailed-steps__item detailed-steps__item--reverse">
-                    {{-- TODO: trocar por <img src="{{ asset('images/screenshots/como-funciona-2.png') }}" alt="..."> quando o print estiver disponível --}}
-                    <div class="detailed-steps__media">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="m21 15-5-5L5 21" />
-                        </svg>
-                        <span>Print do sistema em breve</span>
-                    </div>
+                    <img src="{{ asset('images/screenshots/catalogo.jpg') }}"
+                        alt="Tela de catálogos do sistema Auto Peças Center" class="detailed-steps__media">
                     <div class="detailed-steps__content">
                         <span class="detailed-steps__badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -69,16 +53,8 @@
                 </div>
 
                 <div class="detailed-steps__item">
-                    {{-- TODO: trocar por <img src="{{ asset('images/screenshots/como-funciona-3.png') }}" alt="..."> quando o print estiver disponível --}}
-                    <div class="detailed-steps__media">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="m21 15-5-5L5 21" />
-                        </svg>
-                        <span>Print do sistema em breve</span>
-                    </div>
+                    <img src="{{ asset('images/screenshots/cotacao.jpg') }}"
+                        alt="Tela de cotação do sistema Auto Peças Center" class="detailed-steps__media">
                     <div class="detailed-steps__content">
                         <span class="detailed-steps__badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

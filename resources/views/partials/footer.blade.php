@@ -3,7 +3,7 @@
         <div class="footer__top">
             <div class="footer__brand">
                 <a href="{{ route('home') }}" class="footer__logo">
-                    <img src="{{ asset('images/logo.png') }}" alt="Auto Peças Center">
+                    <img src="{{ asset('images/white-logo.png') }}" alt="Auto Peças Center">
                 </a>
 
                 <p class="footer__description">
@@ -54,13 +54,11 @@
             </div>
 
             <div class="footer__column">
-                <h3 class="footer__heading">Para sua empresa</h3>
+                <h3 class="footer__heading">Para seu negócio</h3>
                 <ul class="footer__links">
-                    <li><a href="#">Quem pode usar</a></li>
-                    <li><a href="#">Planos e preços</a></li>
+                    <li><a href="{{ route('planos') }}">Planos e preços</a></li>
                     <li><a href="#">Segurança</a></li>
-                    <li><a href="#">Suporte</a></li>
-                    <li><a href="#">Treinamentos</a></li>
+                    <li><a href="{{ route('contato') }}">Suporte</a></li>
                 </ul>
             </div>
 

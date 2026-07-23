@@ -17,7 +17,7 @@
         display: inline-flex;
 
         img {
-            height: 140px;
+            height: 40px;
             width: auto;
             margin-bottom: 0.25rem;
         }
@@ -29,6 +29,7 @@
         font-size: typography.$font-size-sm;
         color: colors.$color-gray;
         line-height: typography.$line-height-loose;
+        margin-top: 20px;
         margin-bottom: 1.5rem;
     }
 

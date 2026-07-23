@@ -25,7 +25,7 @@ body > header.header {
         flex-shrink: 0;
 
         img {
-            height: 140px;
+            height: 40px;
             width: auto;
         }
     }
@@ -221,7 +221,7 @@ body > header.header {
 
     @media (max-width: grid.$extra-small-size) {
         .header__logo img {
-            height: 90px;
+            height: 32px;
         }
     }
 }

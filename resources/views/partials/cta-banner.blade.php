@@ -7,7 +7,7 @@
             @endisset
         </div>
 
-        <a href="{{ $buttonUrl ?? '#agendar-demonstracao' }}" class="btn btn--solid">
+        <a href="{{ $buttonUrl ?? route('contato') }}" class="btn btn--solid">
             {{ $buttonLabel ?? 'Iniciar avaliação' }}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round">

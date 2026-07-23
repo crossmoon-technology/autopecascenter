@@ -46,6 +46,14 @@
         }
     }
 
+    img.detailed-steps__media {
+        width: 100%;
+        height: auto;
+        aspect-ratio: auto;
+        border-style: solid;
+        background-color: colors.$color-header-bg;
+    }
+
     .detailed-steps__badge {
         display: inline-flex;
         align-items: center;
