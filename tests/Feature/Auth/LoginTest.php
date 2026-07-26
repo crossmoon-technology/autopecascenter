@@ -28,6 +28,30 @@ class LoginTest extends TestCase
         $response->assertRedirect('/cliente');
     }
 
+    /**
+     * Regression: the "Lembrar-me" checkbox had no `value` attribute, so a browser sent
+     * `remember=on` when checked — a value LoginRequest's `boolean` rule rejects (it only
+     * accepts true/false/0/1/'0'/'1'), which failed validation and silently bounced the
+     * user back to the login page. The view now sends `remember=1` when checked.
+     */
+    public function test_login_with_the_remember_me_checkbox_checked_succeeds(): void
+    {
+        $user = User::factory()->create([
+            'role' => Role::Client,
+            'password' => bcrypt('password'),
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => '1',
+        ]);
+
+        $response->assertRedirect('/cliente');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotNull($user->fresh()->remember_token);
+    }
+
     public function test_login_ignores_a_stale_intended_url_from_a_different_panel(): void
     {
         // Simulates what happens after logging out of a panel: Filament's own
