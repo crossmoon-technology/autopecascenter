@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Catalogs\Tables;
 
 use App\Jobs\ImportCatalogParts;
+use App\Jobs\ImportCatalogPartsUpdate;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
+use App\Rules\ValidJsonl;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -12,6 +14,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
@@ -103,6 +106,30 @@ class CatalogsTable
                             ->success()
                             ->send();
                     }),
+                Action::make('uploadUpdate')
+                    ->label('Subir atualizações')
+                    ->icon(Heroicon::OutlinedArrowUpOnSquareStack)
+                    ->visible(fn (Catalog $record): bool => $record->import_status === ImportStatus::Imported)
+                    ->schema([
+                        FileUpload::make('file')
+                            ->label('Arquivo de atualização')
+                            ->required()
+                            ->rules(['extensions:jsonl', new ValidJsonl])
+                            ->disk('local')
+                            ->directory('catalogs/updates')
+                            ->helperText('Mesmo formato jsonl do arquivo original. Peças com um código que já existe nesse catálogo são ignoradas — só as novas são adicionadas.'),
+                    ])
+                    ->action(function (Catalog $record, array $data): void {
+                        $record->forceFill(['import_status' => ImportStatus::Importing])->save();
+
+                        ImportCatalogPartsUpdate::dispatch($record, $data['file']);
+
+                        Notification::make()
+                            ->title('Atualização iniciada')
+                            ->body('As peças novas serão processadas em segundo plano — códigos já existentes são ignorados.')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('deleteParts')
                     ->label('Excluir peças')
                     ->icon(Heroicon::OutlinedTrash)
@@ -110,7 +137,10 @@ class CatalogsTable
                     ->requiresConfirmation()
                     ->visible(fn (Catalog $record): bool => $record->import_status === ImportStatus::Imported && $record->parts()->exists())
                     ->action(function (Catalog $record) {
-                        $record->parts()->delete();
+                        // forceDelete, não delete: essa ação existe pra liberar o campo de
+                        // arquivo pra reimportação, e o unique(catalog_id, codigo) ainda
+                        // bloquearia os mesmos códigos se as peças só fossem soft-deletadas.
+                        $record->parts()->forceDelete();
                         $record->update(['is_active' => false]);
                         $record->forceFill(['import_status' => ImportStatus::NotImported])->save();
 

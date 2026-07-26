@@ -16,8 +16,9 @@ class FilamentAuthenticate extends Authenticate
     {
         return match ($role) {
             Role::SuperAdmin => '/super-admin',
-            Role::Admin      => '/admin',
-            Role::Client     => '/cliente',
+            Role::Admin => '/vendedor',
+            Role::Client => '/cliente',
+            Role::Seller => '/vendedor',
         };
     }
 }

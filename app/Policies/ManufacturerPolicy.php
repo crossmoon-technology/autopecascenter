@@ -6,7 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 
 /**
- * Cadastro de fabricantes é coisa de SuperAdmin — contas de vendedor (Role::Admin) não
+ * Cadastro de fabricantes é coisa de SuperAdmin — contas de vendedor (Role::Seller) não
  * têm acesso nenhum aqui (nem o menu aparece, ver HasAuthorization::canAccess() ==
  * canViewAny()). Não confundir com App\Filament\Pages\Configuracoes\ManufacturerPreferences,
  * que é a tela (separada) onde o vendedor escolhe QUAIS fabricantes já cadastrados

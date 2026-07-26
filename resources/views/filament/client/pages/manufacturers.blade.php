@@ -55,7 +55,35 @@
             font-size: 0.875rem;
             opacity: 0.65;
         }
+        .cm-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            margin-bottom: 1.25rem;
+            max-width: 20rem;
+        }
+        .cm-filter label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
     </style>
+
+    @php $sellers = $this->sellers(); @endphp
+
+    @if ($sellers->count() > 1)
+        <div class="cm-filter">
+            <label for="cm-seller-filter">Vendedor</label>
+            <x-filament::input.wrapper class="flex-1">
+                <x-filament::input.select id="cm-seller-filter" wire:model.live="sellerId">
+                    <option value="">Todos os vendedores</option>
+                    @foreach ($sellers as $seller)
+                        <option value="{{ $seller->id }}">{{ $seller->name }}</option>
+                    @endforeach
+                </x-filament::input.select>
+            </x-filament::input.wrapper>
+        </div>
+    @endif
 
     @php $manufacturers = $this->getManufacturers(); @endphp
 

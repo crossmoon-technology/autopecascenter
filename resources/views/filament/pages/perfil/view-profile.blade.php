@@ -47,6 +47,46 @@
         .profile-hint a {
             text-decoration: underline;
         }
+        .profile-code {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .profile-code__value {
+            font-family: ui-monospace, monospace;
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: rgb(249 70 3);
+        }
+        .profile-code__copy {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            width: 2.25rem;
+            height: 2.25rem;
+            flex-shrink: 0;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(127, 127, 127, 0.25);
+            background: transparent;
+            color: inherit;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+        .profile-code__copy:hover {
+            opacity: 1;
+            border-color: rgb(249 70 3);
+        }
+        .profile-code__copy svg {
+            width: 1.125rem;
+            height: 1.125rem;
+        }
+        .profile-code__copied {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgb(21 128 61);
+        }
     </style>
 
     @php
@@ -77,14 +117,36 @@
                     <dt>Membro desde</dt>
                     <dd>{{ $user->created_at->translatedFormat('d/m/Y') }}</dd>
                 </div>
-                @if (! $this->isSeller() && $user->invitedBy)
+                @if (! $this->isSeller() && $user->sellers->isNotEmpty())
                     <div class="profile-field">
-                        <dt>Convidado por</dt>
-                        <dd>{{ $user->invitedBy->name }}</dd>
+                        <dt>{{ $user->sellers->count() > 1 ? 'Vendedores' : 'Vendedor' }}</dt>
+                        <dd>{{ $user->sellers->pluck('name')->join(', ') }}</dd>
                     </div>
                 @endif
             </dl>
         </div>
+
+        @if ($user->role === \App\Enums\Role::Seller)
+            <div class="profile-section">
+                <h3>Seu código de vendedor</h3>
+                <p class="profile-hint">Compartilhe com seus clientes — eles usam esse código pra se vincular a você no cadastro em {{ route('register.client') }}.</p>
+
+                <div class="profile-code" x-data="{ copied: false }">
+                    <span class="profile-code__value">{{ $user->referral_code }}</span>
+
+                    <button
+                        type="button"
+                        class="profile-code__copy"
+                        title="Copiar código"
+                        x-on:click="navigator.clipboard.writeText('{{ $user->referral_code }}'); copied = true; setTimeout(() => copied = false, 1500)"
+                    >
+                        <x-filament::icon icon="heroicon-o-clipboard-document" />
+                    </button>
+
+                    <span x-show="copied" x-cloak class="profile-code__copied">Copiado!</span>
+                </div>
+            </div>
+        @endif
 
         @if ($this->isSeller())
             <div class="profile-section">

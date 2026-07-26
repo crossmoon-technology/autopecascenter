@@ -5,20 +5,23 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Ajuda\Faq;
 use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
+use App\Filament\Pages\Buscas\Clients;
 use App\Filament\Pages\Buscas\Favorites;
 use App\Filament\Pages\Buscas\GuidedQuotation;
 use App\Filament\Pages\Buscas\History;
 use App\Filament\Pages\Buscas\Iframes;
-use App\Filament\Pages\Buscas\OrderLinks;
 use App\Filament\Pages\Buscas\Orders;
 use App\Filament\Pages\Buscas\Quotations;
+use App\Filament\Pages\Buscas\ViewClient;
 use App\Filament\Pages\Buscas\ViewFavoriteList;
-use App\Filament\Pages\Buscas\ViewOrderLink;
 use App\Filament\Pages\Buscas\ViewPart;
 use App\Filament\Pages\Buscas\ViewQuotation;
+use App\Filament\Pages\Cliente\AddSeller as ClienteAddSeller;
+use App\Filament\Pages\Cliente\CreateOrder as ClienteCreateOrder;
+use App\Filament\Pages\Cliente\Manufacturers as ClienteManufacturers;
+use App\Filament\Pages\Cliente\OrderHistory as ClienteOrderHistory;
 use App\Filament\Pages\Configuracoes\GeneralSettings;
 use App\Filament\Pages\Configuracoes\ManufacturerPreferences;
-use App\Filament\Pages\Configuracoes\NoResultSearches;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Perfil\ViewProfile;
 use App\Filament\Resources\Catalogs\CatalogResource;
@@ -27,6 +30,7 @@ use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
 use App\Filament\Widgets\OrdersOverview;
 use App\Http\Middleware\FilamentAuthenticate;
+use App\Http\Middleware\RedirectExpiredSellerTrial;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -51,7 +55,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('vendedor')
             ->colors([
                 'primary' => Color::hex('#F94603'),
             ])
@@ -71,6 +75,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Buscas',
                 'Vendas',
+                'Cliente',
                 'Configurações',
             ])
             ->resources([
@@ -92,15 +97,18 @@ class AdminPanelProvider extends PanelProvider
                 ViewFavoriteList::class,
                 Quotations::class,
                 ViewQuotation::class,
-                OrderLinks::class,
-                ViewOrderLink::class,
+                Clients::class,
+                ViewClient::class,
                 Orders::class,
                 GuidedQuotation::class,
                 ViewPart::class,
                 ManufacturerPreferences::class,
-                NoResultSearches::class,
                 GeneralSettings::class,
                 ViewProfile::class,
+                ClienteOrderHistory::class,
+                ClienteCreateOrder::class,
+                ClienteManufacturers::class,
+                ClienteAddSeller::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
@@ -120,6 +128,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
+                RedirectExpiredSellerTrial::class,
                 FilamentAuthenticate::class,
             ]);
     }

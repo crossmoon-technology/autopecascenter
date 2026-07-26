@@ -17,7 +17,7 @@ class HelpMenuTest extends TestCase
 
     public function test_links_to_the_sellers_faq_page_for_an_admin(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->create(['role' => Role::Seller]));
 
         Livewire::test(HelpMenu::class)
             ->assertSuccessful()

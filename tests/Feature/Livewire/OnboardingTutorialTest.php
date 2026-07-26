@@ -63,7 +63,7 @@ class OnboardingTutorialTest extends TestCase
     public function test_shows_seller_specific_content_for_admin_and_super_admin(): void
     {
         $this->actingAs(User::factory()->create([
-            'role' => Role::Admin,
+            'role' => Role::Seller,
             'tutorial_completed_at' => null,
             'lgpd_accepted_at' => now(),
         ]));
@@ -110,7 +110,7 @@ class OnboardingTutorialTest extends TestCase
 
     public function test_seller_steps_highlight_each_of_the_3_search_menus_separately(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin, 'tutorial_completed_at' => null]));
+        $this->actingAs(User::factory()->create(['role' => Role::Seller, 'tutorial_completed_at' => null]));
 
         $data = Livewire::test(OnboardingTutorial::class)->instance()->steps();
         $selectors = array_column($data['steps'], 'selector');

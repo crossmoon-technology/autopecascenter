@@ -40,4 +40,15 @@ class Catalog extends Model
     {
         return $this->hasMany(Informativo::class);
     }
+
+    protected static function booted(): void
+    {
+        // O force delete já é coberto pelo cascadeOnDelete() da FK no banco; aqui só
+        // cuidamos do soft delete, que é uma UPDATE e não dispara aquele cascade.
+        static::deleting(function (Catalog $catalog): void {
+            if (! $catalog->isForceDeleting()) {
+                $catalog->parts()->delete();
+            }
+        });
+    }
 }

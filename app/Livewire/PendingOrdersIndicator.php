@@ -27,7 +27,7 @@ class PendingOrdersIndicator extends Component
         }
 
         return Order::query()
-            ->whereHas('user', fn ($query) => $query->where('invited_by_id', Auth::id()))
+            ->forSeller(Auth::user())
             ->whereNotIn('status', [Status::Finished, Status::Cancelled])
             ->count();
     }

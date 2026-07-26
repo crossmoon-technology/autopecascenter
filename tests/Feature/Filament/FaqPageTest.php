@@ -20,7 +20,7 @@ class FaqPageTest extends TestCase
 
     public function test_shows_the_sellers_faq_content_for_an_admin(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->create(['role' => Role::Seller]));
 
         Livewire::test(Faq::class)
             ->assertSuccessful()

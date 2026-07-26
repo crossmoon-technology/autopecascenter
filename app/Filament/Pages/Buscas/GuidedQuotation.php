@@ -72,7 +72,7 @@ class GuidedQuotation extends Page implements HasForms
     public function mount(int|string $order): void
     {
         $this->currentOrder = Order::query()
-            ->whereHas('user', fn (Builder $query) => $query->where('invited_by_id', Auth::id()))
+            ->forSeller(Auth::user())
             ->with(['user', 'items.preferredManufacturers'])
             ->findOrFail($order);
 

@@ -6,7 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 
 /**
- * Cadastro de catálogos é coisa de SuperAdmin — contas de vendedor (Role::Admin) não têm
+ * Cadastro de catálogos é coisa de SuperAdmin — contas de vendedor (Role::Seller) não têm
  * acesso nenhum aqui (nem o menu aparece, ver HasAuthorization::canAccess() ==
  * canViewAny()). Buscar peças nesses catálogos continua liberado pra todo mundo — isso é
  * a Base de dados (App\Filament\Pages\Buscas\CatalogDatabaseSearch), não esse resource.

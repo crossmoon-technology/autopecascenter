@@ -3,6 +3,7 @@
 namespace App\Filament\Client\Pages;
 
 use App\Filament\Client\Pages\Concerns\ScopesManufacturersToInvitingSeller;
+use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
@@ -15,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class CreateOrder extends Page implements HasForms
@@ -42,10 +44,62 @@ class CreateOrder extends Page implements HasForms
         $this->fillBlankForm();
     }
 
+    /**
+     * De quem são os pedidos criados e a quem os vendedores pertencem — sempre o próprio
+     * usuário logado. Existe como hook (em vez de usar Auth::user() direto no resto da
+     * classe) só pra App\Filament\Pages\Cliente\CreateOrder poder reaproveitar esta
+     * página inteira sob outro grupo de navegação, pra quem já foi Role::Client e virou
+     * Role::Seller (ver User::hasClientHistory()) — o alvo continua sendo a mesma conta.
+     */
+    protected function targetUser(): User
+    {
+        return Auth::user();
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function sellers(): Collection
+    {
+        return $this->targetUser()->sellers()->orderBy('name')->get();
+    }
+
+    /**
+     * O vendedor escolhido no formulário — cai automaticamente pro único vendedor do
+     * cliente quando ele só tem um (o campo nem aparece nesse caso, ver form()). Um id
+     * que não pertence aos vendedores do cliente (formulário adulterado) é ignorado, sem
+     * derrubar a página — só faz a lista de fabricantes cair no fallback "todos os ativos".
+     */
+    private function selectedSeller(): ?User
+    {
+        $sellers = $this->sellers();
+        $seller_id = $this->data['seller_id'] ?? null;
+
+        if ($seller_id === null) {
+            return $sellers->count() === 1 ? $sellers->first() : null;
+        }
+
+        return $sellers->firstWhere('id', $seller_id);
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
+                Select::make('seller_id')
+                    ->label('Vendedor')
+                    ->helperText('Pra qual vendedor esse pedido é.')
+                    ->options(fn () => $this->sellers()->pluck('name', 'id'))
+                    ->required()
+                    // Um cliente com um único vendedor não precisa escolher nada — o
+                    // campo já vem preenchido (ver fillBlankForm()) e só aparece de
+                    // verdade quando existe uma escolha real a fazer. Precisa continuar
+                    // dehydratado mesmo escondido, senão getState() descarta o valor e
+                    // save() nunca acha o vendedor (ver Filament\Schemas\Components\Concerns\HasState::isDehydrated()).
+                    ->visible(fn (): bool => $this->sellers()->count() > 1)
+                    ->dehydratedWhenHidden()
+                    ->live()
+                    ->columnSpanFull(),
                 Repeater::make('items')
                     ->label('Peças')
                     ->schema([
@@ -71,7 +125,7 @@ class CreateOrder extends Page implements HasForms
                             ->label('Fabricantes de preferência (opcional)')
                             ->helperText('A ordem escolhida será considerada como ordem de preferência.')
                             ->multiple()
-                            ->options(fn () => $this->manufacturersScopedToInvitingSeller()->pluck('name', 'id'))
+                            ->options(fn () => $this->manufacturersScopedToInvitingSeller($this->selectedSeller())->pluck('name', 'id'))
                             ->searchable()
                             ->extraAttributes(['class' => 'onboarding-target-manufacturers'])
                             ->columnSpanFull(),
@@ -96,7 +150,19 @@ class CreateOrder extends Page implements HasForms
     {
         $state = $this->form->getState();
 
-        $order = Auth::user()->orders()->create([
+        $seller = $this->sellers()->firstWhere('id', $state['seller_id'] ?? null);
+
+        if (! $seller) {
+            Notification::make()
+                ->title('Escolha um vendedor antes de enviar o pedido.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $order = $this->targetUser()->orders()->create([
+            'seller_id' => $seller->id,
             'notes' => $state['notes'] ?: null,
         ]);
 
@@ -132,7 +198,10 @@ class CreateOrder extends Page implements HasForms
 
     private function fillBlankForm(): void
     {
+        $sellers = $this->sellers();
+
         $this->form->fill([
+            'seller_id' => $sellers->count() === 1 ? $sellers->first()->id : null,
             'items' => [
                 ['description' => '', 'quantity' => 1, 'manufacturer_ids' => []],
             ],

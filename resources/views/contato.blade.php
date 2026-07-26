@@ -51,7 +51,7 @@
                         </span>
                         <div>
                             <h3>Telefone</h3>
-                            <p>(11) 99999-9999</p>
+                            <p>{{ \App\Models\Setting::get('contact_phone', '(11) 99999-9999') }}</p>
                         </div>
                     </div>
 
@@ -65,7 +65,7 @@
                         </span>
                         <div>
                             <h3>E-mail</h3>
-                            <p>contato@autopecascenter.com.br</p>
+                            <p>{{ \App\Models\Setting::get('contact_email', 'contato@autopecascenter.com.br') }}</p>
                         </div>
                     </div>
 
@@ -79,7 +79,7 @@
                         </span>
                         <div>
                             <h3>Endereço</h3>
-                            <p>Av. das Peças, 123 - São Paulo/SP<br>CEP: 01234-567</p>
+                            <p>{{ \App\Models\Setting::get('contact_address', 'Av. das Peças, 123 - São Paulo/SP, CEP: 01234-567') }}</p>
                         </div>
                     </div>
 
@@ -93,7 +93,7 @@
                         </span>
                         <div>
                             <h3>Horário de atendimento</h3>
-                            <p>Segunda a sexta, 8h às 18h</p>
+                            <p>{{ \App\Models\Setting::get('business_hours', 'Segunda a sexta, 8h às 18h') }}</p>
                         </div>
                     </div>
                 </div>

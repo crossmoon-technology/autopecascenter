@@ -27,8 +27,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 2]);
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -47,8 +47,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $item = $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
         $item->preferredManufacturers()->attach($preferred, ['position' => 0]);
 
@@ -65,8 +65,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 3]);
         $order->items()->create(['description' => 'Outra peça', 'quantity' => 1]);
 
@@ -91,8 +91,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 2]);
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 3]);
 
@@ -108,8 +108,8 @@ class GuidedQuotationPageTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Item 1', 'quantity' => 1]);
         $order->items()->create(['description' => 'Item 2', 'quantity' => 1]);
 
@@ -125,8 +125,8 @@ class GuidedQuotationPageTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Único item', 'quantity' => 1]);
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -144,8 +144,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 3]);
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -163,8 +163,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 1]);
 
         $component = Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -185,8 +185,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 1]);
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -209,8 +209,8 @@ class GuidedQuotationPageTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Único item', 'quantity' => 1]);
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -230,8 +230,8 @@ class GuidedQuotationPageTest extends TestCase
 
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'HG 41297', 'quantity' => 1]);
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
@@ -247,8 +247,8 @@ class GuidedQuotationPageTest extends TestCase
     public function test_returns_404_for_an_order_belonging_to_another_sellers_client(): void
     {
         $otherSeller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $otherClient = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $otherSeller->id]);
-        $order = Order::factory()->for($otherClient)->create();
+        $otherClient = User::factory()->clientOf($otherSeller)->create();
+        $order = Order::factory()->for($otherClient)->for($otherSeller, 'seller')->create();
         $order->items()->create(['description' => 'Peça', 'quantity' => 1]);
 
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));

@@ -8,8 +8,8 @@ use App\Filament\Client\Pages\Manufacturers as ClientManufacturers;
 use App\Filament\Client\Pages\OrderHistory;
 use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
+use App\Filament\Pages\Buscas\Clients;
 use App\Filament\Pages\Buscas\Iframes;
-use App\Filament\Pages\Buscas\OrderLinks;
 use App\Filament\Pages\Buscas\Orders;
 use Filament\Pages\Dashboard;
 use Illuminate\Contracts\View\View;
@@ -118,7 +118,7 @@ class OnboardingTutorial extends Component
         $iframesUrl = Iframes::getUrl(panel: $panel);
         $catalogDatabaseSearchUrl = CatalogDatabaseSearch::getUrl(panel: $panel);
         $apiUrl = Api::getUrl(panel: $panel);
-        $clientesUrl = OrderLinks::getUrl(panel: $panel);
+        $clientesUrl = Clients::getUrl(panel: $panel);
         $pedidosUrl = Orders::getUrl(panel: $panel);
 
         return [

@@ -4,6 +4,7 @@ namespace App\Filament\Client\Pages;
 
 use App\Models\Order;
 use App\Models\Order\Enums\Status;
+use App\Models\User;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -24,11 +25,22 @@ class OrderHistory extends Page
     protected static ?string $title = 'Histórico de pedidos';
 
     /**
+     * De quem são os pedidos exibidos — sempre o próprio usuário logado. Existe como
+     * hook só pra App\Filament\Pages\Cliente\OrderHistory poder reaproveitar esta página
+     * inteira sob outro grupo de navegação, pra quem já foi Role::Client e virou
+     * Role::Seller (ver User::hasClientHistory()) — o alvo continua a mesma conta.
+     */
+    protected function targetUser(): User
+    {
+        return Auth::user();
+    }
+
+    /**
      * @return Collection<int, Order>
      */
     public function orders(): Collection
     {
-        return Auth::user()->orders()->with('items.preferredManufacturers')->latest()->get();
+        return $this->targetUser()->orders()->with('items.preferredManufacturers')->latest()->get();
     }
 
     /**
@@ -37,7 +49,7 @@ class OrderHistory extends Page
      */
     public function cancelOrder(int $order_id): void
     {
-        $order = Auth::user()->orders()->whereKey($order_id)->first();
+        $order = $this->targetUser()->orders()->whereKey($order_id)->first();
 
         if (! $order || ! in_array($order->status, [Status::Pending, Status::Processing], true)) {
             return;

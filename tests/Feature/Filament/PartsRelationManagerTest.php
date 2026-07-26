@@ -44,7 +44,7 @@ class PartsRelationManagerTest extends TestCase
             'pageClass' => EditCatalog::class,
         ])->callTableAction('delete', $part);
 
-        $this->assertDatabaseMissing('parts', ['id' => $part->id]);
+        $this->assertSoftDeleted('parts', ['id' => $part->id]);
     }
 
     public function test_edit_and_delete_are_disabled_on_the_read_only_view_page(): void

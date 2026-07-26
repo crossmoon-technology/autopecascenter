@@ -23,6 +23,12 @@
                 <p class="login-card__subtitle">Acesse sua conta para continuar</p>
             </div>
 
+            @if (session('status'))
+                <div class="login-alert login-alert--success">
+                    {{ session('status') }}
+                </div>
+            @endif
+
             @if (session('error'))
                 <div class="login-alert login-alert--error">
                     {{ session('error') }}

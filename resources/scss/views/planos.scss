@@ -9,10 +9,12 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1.5rem;
-        align-items: start;
+        align-items: stretch;
     }
 
     .pricing__card {
+        display: flex;
+        flex-direction: column;
         border: 1px solid colors.$color-border;
         border-radius: 14px;
         padding: 2.25rem 2rem;

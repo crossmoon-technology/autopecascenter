@@ -12,5 +12,6 @@ class RoleTest extends TestCase
         $this->assertSame('super-admin', Role::SuperAdmin->panelId());
         $this->assertSame('admin', Role::Admin->panelId());
         $this->assertSame('client', Role::Client->panelId());
+        $this->assertSame('admin', Role::Seller->panelId());
     }
 }

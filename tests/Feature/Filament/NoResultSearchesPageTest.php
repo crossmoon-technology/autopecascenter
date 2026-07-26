@@ -20,6 +20,30 @@ class NoResultSearchesPageTest extends TestCase
         $this->assertSame('Configurações', NoResultSearches::getNavigationGroup());
     }
 
+    /**
+     * A página agrega buscas de todos os usuários da plataforma (não só do vendedor
+     * atual) — por isso só está registrada no painel super-admin (ver
+     * SuperAdminPanelProvider), nunca no painel do vendedor (ver AdminPanelProvider), pra
+     * um vendedor não conseguir ver termos buscados por outros vendedores/clientes.
+     */
+    public function test_is_not_accessible_from_the_sellers_panel(): void
+    {
+        $this->actingAs(User::factory()->approvedSeller()->create());
+
+        $response = $this->get('/vendedor/no-result-searches');
+
+        $response->assertNotFound();
+    }
+
+    public function test_is_accessible_from_the_super_admin_panel(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $response = $this->get('/super-admin/no-result-searches');
+
+        $response->assertOk();
+    }
+
     public function test_lists_queries_that_found_nothing(): void
     {
         SearchHistory::factory()->create([

@@ -29,8 +29,7 @@ trait ScopesOrdersByPeriod
 
     protected function scopedOrders(string $period): Builder
     {
-        $query = Order::query()
-            ->whereHas('user', fn (Builder $query) => $query->where('invited_by_id', Auth::id()));
+        $query = Order::query()->forSeller(Auth::user());
 
         [$start, $end] = $this->periodRange($period);
 

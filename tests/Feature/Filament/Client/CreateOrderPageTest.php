@@ -42,7 +42,8 @@ class CreateOrderPageTest extends TestCase
 
     public function test_submitting_creates_the_order_with_items_quantities_and_manufacturer_preferences(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
         $this->actingAs($user);
         $manufacturer = Manufacturer::factory()->create(['name' => 'Cofap']);
 
@@ -71,7 +72,8 @@ class CreateOrderPageTest extends TestCase
 
     public function test_submitting_dispatches_order_created_with_the_new_orders_id(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
         $this->actingAs($user);
 
         Livewire::test(CreateOrder::class)
@@ -91,10 +93,10 @@ class CreateOrderPageTest extends TestCase
         $enabled = Manufacturer::factory()->create(['name' => 'Cofap']);
         $notEnabled = Manufacturer::factory()->create(['name' => 'Magneti Marelli']);
 
-        $seller = User::factory()->create(['role' => Role::Admin]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
         $seller->preferredManufacturers()->attach($enabled);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
         $this->actingAs($client);
 
         Livewire::test(CreateOrder::class)
@@ -104,7 +106,8 @@ class CreateOrderPageTest extends TestCase
 
     public function test_preserves_the_chosen_manufacturer_preference_order(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
         $this->actingAs($user);
         $cofap = Manufacturer::factory()->create(['name' => 'Cofap']);
         $marelli = Manufacturer::factory()->create(['name' => 'Magneti Marelli']);
@@ -129,7 +132,8 @@ class CreateOrderPageTest extends TestCase
 
     public function test_submitting_saves_the_order_level_comment(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
         $this->actingAs($user);
 
         Livewire::test(CreateOrder::class)
@@ -148,7 +152,8 @@ class CreateOrderPageTest extends TestCase
 
     public function test_leaves_notes_null_when_left_blank(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
         $this->actingAs($user);
 
         Livewire::test(CreateOrder::class)
@@ -166,8 +171,9 @@ class CreateOrderPageTest extends TestCase
 
     public function test_allows_submitting_more_than_one_order(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
-        Order::factory()->for($user)->create();
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
+        Order::factory()->for($user)->for($seller, 'seller')->create();
         $this->actingAs($user);
 
         Livewire::test(CreateOrder::class)
@@ -184,7 +190,8 @@ class CreateOrderPageTest extends TestCase
 
     public function test_resets_the_form_after_submitting_so_another_order_can_be_started(): void
     {
-        $user = User::factory()->create(['role' => Role::Client]);
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
         $this->actingAs($user);
 
         Livewire::test(CreateOrder::class)
@@ -199,5 +206,82 @@ class CreateOrderPageTest extends TestCase
                     && array_values($items)[0]['description'] === ''
                     && (int) array_values($items)[0]['quantity'] === 1;
             });
+    }
+
+    public function test_seller_field_is_hidden_and_prefilled_when_the_client_has_a_single_seller(): void
+    {
+        $seller = User::factory()->create(['role' => Role::Seller]);
+        $user = User::factory()->clientOf($seller)->create();
+        $this->actingAs($user);
+
+        Livewire::test(CreateOrder::class)
+            ->assertSet('data.seller_id', $seller->id)
+            ->assertDontSee('Vendedor');
+    }
+
+    public function test_seller_field_is_visible_and_required_when_the_client_has_more_than_one_seller(): void
+    {
+        $firstSeller = User::factory()->create(['role' => Role::Seller, 'name' => 'Loja A']);
+        $secondSeller = User::factory()->create(['role' => Role::Seller, 'name' => 'Loja B']);
+        $user = User::factory()->clientOf($firstSeller)->create();
+        $user->linkToSeller($secondSeller);
+        $this->actingAs($user);
+
+        Livewire::test(CreateOrder::class)
+            ->assertSet('data.seller_id', null)
+            ->assertSee('Vendedor')
+            ->assertSee('Loja A')
+            ->assertSee('Loja B')
+            ->fillForm([
+                'items' => [
+                    ['description' => 'Vela de ignição', 'quantity' => 1, 'manufacturer_ids' => []],
+                ],
+            ])
+            ->call('save')
+            ->assertHasFormErrors(['seller_id' => 'required']);
+
+        $this->assertSame(0, Order::query()->where('user_id', $user->id)->count());
+    }
+
+    public function test_submitting_assigns_the_order_to_the_seller_chosen_among_several(): void
+    {
+        $firstSeller = User::factory()->create(['role' => Role::Seller, 'name' => 'Loja A']);
+        $secondSeller = User::factory()->create(['role' => Role::Seller, 'name' => 'Loja B']);
+        $user = User::factory()->clientOf($firstSeller)->create();
+        $user->linkToSeller($secondSeller);
+        $this->actingAs($user);
+
+        Livewire::test(CreateOrder::class)
+            ->fillForm([
+                'seller_id' => $secondSeller->id,
+                'items' => [
+                    ['description' => 'Vela de ignição', 'quantity' => 1, 'manufacturer_ids' => []],
+                ],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $order = Order::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($secondSeller->id, $order->seller_id);
+    }
+
+    public function test_manufacturer_options_follow_the_chosen_seller_when_the_client_has_more_than_one(): void
+    {
+        $preferredByFirst = Manufacturer::factory()->create(['name' => 'Cofap']);
+        $preferredBySecond = Manufacturer::factory()->create(['name' => 'Hipper Freios']);
+
+        $firstSeller = User::factory()->create(['role' => Role::Seller]);
+        $firstSeller->preferredManufacturers()->attach($preferredByFirst);
+        $secondSeller = User::factory()->create(['role' => Role::Seller]);
+        $secondSeller->preferredManufacturers()->attach($preferredBySecond);
+
+        $user = User::factory()->clientOf($firstSeller)->create();
+        $user->linkToSeller($secondSeller);
+        $this->actingAs($user);
+
+        Livewire::test(CreateOrder::class)
+            ->set('data.seller_id', $secondSeller->id)
+            ->assertSee('Hipper Freios')
+            ->assertDontSee('Cofap');
     }
 }
