@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'catalog_import' => [
+        'api_key' => env('CATALOG_IMPORT_API_KEY'),
+    ],
+
 ];

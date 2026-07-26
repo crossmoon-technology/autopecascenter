@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['manufacturer_id', 'name', 'descricao', 'file', 'extracted_at', 'is_active'])]
+#[Fillable(['manufacturer_id', 'name', 'slug', 'descricao', 'file', 'extracted_at', 'is_active'])]
 class Catalog extends Model
 {
     /** @use HasFactory<CatalogFactory> */
