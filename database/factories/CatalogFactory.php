@@ -23,7 +23,8 @@ class CatalogFactory extends Factory
         return [
             'manufacturer_id' => Manufacturer::factory(),
             'name' => fake()->unique()->words(3, true),
-            'file' => 'catalogs/' . fake()->uuid() . '.jsonl',
+            'slug' => fake()->unique()->slug(),
+            'file' => 'catalogs/'.fake()->uuid().'.jsonl',
             'extracted_at' => fake()->date(),
             'is_active' => true,
         ];

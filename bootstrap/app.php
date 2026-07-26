@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureValidCatalogImportApiKey;
 use App\Http\Middleware\FilamentAuthenticate;
 use App\Http\Middleware\RedirectExpiredSellerTrial;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
@@ -12,10 +13,15 @@ use Illuminate\Support\Facades\Auth;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'catalog-import.api-key' => EnsureValidCatalogImportApiKey::class,
+        ]);
+
         // Sem isso, $request->ip() (usado pro registration_ip único em RegisterRequest)
         // vê o IP de quem quer que esteja na frente do nginx (load balancer, CDN) em vez
         // do visitante de verdade — em produção, atrás de qualquer proxy reverso, isso

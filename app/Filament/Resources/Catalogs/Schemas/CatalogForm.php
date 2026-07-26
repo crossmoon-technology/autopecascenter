@@ -11,7 +11,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
 class CatalogForm
 {
@@ -25,7 +27,18 @@ class CatalogForm
                     ->required(),
                 TextInput::make('name')
                     ->label('Nome')
-                    ->required(),
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (string $operation, Set $set, ?string $state) {
+                        if ($operation === 'create') {
+                            $set('slug', Str::slug($state));
+                        }
+                    }),
+                TextInput::make('slug')
+                    ->label('Slug')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->helperText('Identificador único usado pela API de importação de catálogo.'),
                 Textarea::make('descricao')
                     ->label('Descrição')
                     ->rows(3)
