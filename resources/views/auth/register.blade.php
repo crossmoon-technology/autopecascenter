@@ -17,7 +17,7 @@
 
             <div class="register-card__header">
                 <a href="{{ url('/') }}" class="register-card__logo">
-                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
+                    <img src="{{ asset('images/white-logo.png') }}" alt="{{ config('app.name') }}">
                 </a>
                 <h1 class="register-card__title">Crie sua conta</h1>
                 <p class="register-card__subtitle">Preencha os dados abaixo para começar</p>
@@ -35,7 +35,7 @@
                 </div>
             @enderror
 
-            <form method="POST" action="{{ route('register.attempt') }}" class="register-form" novalidate>
+            <form method="POST" action="{{ route('register.seller.attempt') }}" class="register-form" novalidate>
                 @csrf
 
                 <div class="register-form__row">
@@ -135,7 +135,7 @@
             </div>
 
             <div class="register-card__back">
-                <a href="{{ url('/') }}">← Voltar ao site</a>
+                <a href="{{ route('register') }}">← Escolher outro tipo de conta</a>
             </div>
 
         </div>

@@ -20,15 +20,18 @@ class CatalogForm
         return $schema
             ->components([
                 Select::make('manufacturer_id')
+                    ->label('Fabricante')
                     ->relationship('manufacturer', 'name')
                     ->required(),
                 TextInput::make('name')
+                    ->label('Nome')
                     ->required(),
                 Textarea::make('descricao')
                     ->label('Descrição')
                     ->rows(3)
                     ->columnSpanFull(),
                 FileUpload::make('file')
+                    ->label('Arquivo original')
                     ->required()
                     ->rules(['extensions:jsonl', new ValidJsonl])
                     ->directory('catalogs')
@@ -39,9 +42,31 @@ class CatalogForm
                         $record->import_status === ImportStatus::Importing => 'Não é possível anexar um novo arquivo enquanto a importação estiver em andamento.',
                         default => null,
                     }),
+                // Os dois abaixo só existem pra exibição — nunca aparecem em criar/editar,
+                // já que nenhum dos dois é preenchido pelo usuário através desse form
+                // (import_status e update_file são geridos pelos jobs de importação).
+                TextInput::make('import_status')
+                    ->label('Importação')
+                    ->disabled()
+                    ->visible(fn (string $operation): bool => $operation === 'view')
+                    // attributesToArray() (usado pelo fillForm do ViewRecord) já
+                    // serializa o enum pro valor cru (int) antes de chegar aqui, não a
+                    // instância — por isso o tryFrom, além do caso já-instância.
+                    ->afterStateHydrated(function (TextInput $component, mixed $state): void {
+                        $status = $state instanceof ImportStatus ? $state : ImportStatus::tryFrom($state);
+
+                        $component->state($status?->label() ?? $state);
+                    }),
+                FileUpload::make('update_file')
+                    ->label('Última atualização')
+                    ->disk('local')
+                    ->disabled()
+                    ->visible(fn (string $operation, ?Catalog $record): bool => $operation === 'view' && filled($record?->update_file)),
                 DatePicker::make('extracted_at')
+                    ->label('Extraído em')
                     ->required(),
                 Toggle::make('is_active')
+                    ->label('Ativo')
                     ->required()
                     ->disabled(fn (?Catalog $record): bool => $record?->import_status !== ImportStatus::Imported)
                     ->helperText(fn (?Catalog $record): string => match (true) {

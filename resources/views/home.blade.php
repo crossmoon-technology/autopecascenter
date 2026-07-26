@@ -95,14 +95,11 @@
             <div class="container">
                 <p class="partners__label">Conectamos você aos principais fornecedores do mercado</p>
                 <div class="partners__list">
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
-                    <span class="partners__logo"></span>
+                    @foreach ($manufacturers as $manufacturer)
+                        <img class="partners__logo"
+                            src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($manufacturer->logo) }}"
+                            alt="{{ $manufacturer->name }}">
+                    @endforeach
                 </div>
             </div>
         </section>

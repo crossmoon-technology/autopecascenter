@@ -6,7 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 
 /**
- * Vendedor (Role::Admin) só pode ver os informativos — SuperAdmin é quem cadastra/edita/
+ * Vendedor (Role::Seller) só pode ver os informativos — SuperAdmin é quem cadastra/edita/
  * apaga. O menu continua aparecendo pro vendedor (viewAny/view liberados), só as ações de
  * escrita ficam escondidas (EditAction/DeleteAction do Filament já respeitam isso sozinhas).
  */
@@ -14,12 +14,12 @@ class InformativoPolicy
 {
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [Role::Admin, Role::SuperAdmin], strict: true);
+        return in_array($user->role, [Role::Seller, Role::SuperAdmin], strict: true);
     }
 
     public function view(User $user): bool
     {
-        return in_array($user->role, [Role::Admin, Role::SuperAdmin], strict: true);
+        return in_array($user->role, [Role::Seller, Role::SuperAdmin], strict: true);
     }
 
     public function create(User $user): bool

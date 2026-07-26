@@ -6,7 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 
 /**
- * Cadastro de peças é coisa de SuperAdmin — contas de vendedor (Role::Admin) não têm
+ * Cadastro de peças é coisa de SuperAdmin — contas de vendedor (Role::Seller) não têm
  * acesso nenhum aqui (nem o menu aparece, ver HasAuthorization::canAccess() ==
  * canViewAny()). Buscar peças continua liberado pra todo mundo via Buscas — isso é
  * só o resource de cadastro/edição.

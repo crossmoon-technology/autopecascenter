@@ -5,17 +5,18 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Ajuda\Faq;
 use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
+use App\Filament\Pages\Buscas\Clients;
 use App\Filament\Pages\Buscas\Favorites;
 use App\Filament\Pages\Buscas\GuidedQuotation;
 use App\Filament\Pages\Buscas\History;
 use App\Filament\Pages\Buscas\Iframes;
-use App\Filament\Pages\Buscas\OrderLinks;
 use App\Filament\Pages\Buscas\Orders;
 use App\Filament\Pages\Buscas\Quotations;
+use App\Filament\Pages\Buscas\ViewClient;
 use App\Filament\Pages\Buscas\ViewFavoriteList;
-use App\Filament\Pages\Buscas\ViewOrderLink;
 use App\Filament\Pages\Buscas\ViewPart;
 use App\Filament\Pages\Buscas\ViewQuotation;
+use App\Filament\Pages\Configuracoes\ApplicationSettings;
 use App\Filament\Pages\Configuracoes\GeneralSettings;
 use App\Filament\Pages\Configuracoes\ManufacturerPreferences;
 use App\Filament\Pages\Configuracoes\NoResultSearches;
@@ -25,6 +26,7 @@ use App\Filament\Resources\Catalogs\CatalogResource;
 use App\Filament\Resources\Informativos\InformativoResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
+use App\Filament\Resources\Sellers\SellerResource;
 use App\Filament\Widgets\OrdersOverview;
 use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -77,6 +79,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 CatalogResource::class,
                 PartResource::class,
                 InformativoResource::class,
+                SellerResource::class,
             ])
             ->discoverResources(in: app_path('Filament/SuperAdmin/Resources'), for: 'App\Filament\SuperAdmin\Resources')
             ->discoverPages(in: app_path('Filament/SuperAdmin/Pages'), for: 'App\Filament\SuperAdmin\Pages')
@@ -91,14 +94,15 @@ class SuperAdminPanelProvider extends PanelProvider
                 ViewFavoriteList::class,
                 Quotations::class,
                 ViewQuotation::class,
-                OrderLinks::class,
-                ViewOrderLink::class,
+                Clients::class,
+                ViewClient::class,
                 Orders::class,
                 GuidedQuotation::class,
                 ViewPart::class,
                 ManufacturerPreferences::class,
                 NoResultSearches::class,
                 GeneralSettings::class,
+                ApplicationSettings::class,
                 ViewProfile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/SuperAdmin/Widgets'), for: 'App\Filament\SuperAdmin\Widgets')

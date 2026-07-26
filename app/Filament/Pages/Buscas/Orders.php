@@ -47,7 +47,7 @@ class Orders extends Page implements HasTable
     protected static ?string $title = 'Pedidos';
 
     /**
-     * Visão única e simples de todos os pedidos de todos os clientes convidados por
+     * Visão única e simples de todos os pedidos de todos os clientes vinculados a
      * este vendedor — sem precisar entrar em cada cliente pra ver o que chegou. O
      * status é alternado direto na linha (pending por padrão, ver App\Models\Order\Enums\Status)
      * — exceto Finalizado, que exige uma cotação associada primeiro (botão "Anexar cotação").
@@ -73,7 +73,7 @@ class Orders extends Page implements HasTable
         return $table
             ->query(
                 fn (): Builder => Order::query()
-                    ->whereHas('user', fn (Builder $query) => $query->where('invited_by_id', Auth::id()))
+                    ->forSeller(Auth::user())
                     ->with(['user', 'items.preferredManufacturers', 'quotation'])
             )
             ->defaultSort('created_at', 'desc')
@@ -190,11 +190,12 @@ class Orders extends Page implements HasTable
                     ->fillForm(fn (): array => ['items' => []])
                     ->action(function (array $data): void {
                         // Não confia no valor de user_id vindo do form só porque as opções do
-                        // Select já são restritas aos clientes convidados — reconfirma a posse
+                        // Select já são restritas aos clientes vinculados — reconfirma a posse
                         // no servidor antes de criar qualquer coisa em nome de outra conta.
-                        $client = Auth::user()->invitedClients()->findOrFail($data['user_id']);
+                        $client = Auth::user()->clients()->findOrFail($data['user_id']);
 
                         $order = $client->orders()->create([
+                            'seller_id' => Auth::id(),
                             'notes' => $data['notes'] ?: null,
                         ]);
 
@@ -260,7 +261,7 @@ class Orders extends Page implements HasTable
                     }),
             ])
             ->emptyStateHeading('Nenhum pedido recebido ainda')
-            ->emptyStateDescription('Os pedidos enviados pelos seus clientes convidados aparecem aqui.')
+            ->emptyStateDescription('Os pedidos enviados pelos seus clientes aparecem aqui.')
             ->emptyStateIcon(Heroicon::OutlinedInboxStack);
     }
 
@@ -293,6 +294,6 @@ class Orders extends Page implements HasTable
      */
     private function clientOptionsForNewOrder(): array
     {
-        return Auth::user()->invitedClients()->orderBy('name')->pluck('name', 'id')->all();
+        return Auth::user()->clients()->orderBy('name')->pluck('users.name', 'users.id')->all();
     }
 }

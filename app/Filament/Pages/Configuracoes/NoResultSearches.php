@@ -33,10 +33,13 @@ class NoResultSearches extends Page implements HasTable
     protected static ?string $title = 'Buscas sem resultado';
 
     /**
-     * Agregado entre todos os usuários (não só o usuário atual) — a ideia é dar pro
-     * Admin/SuperAdmin um radar do que falta cadastrar, não uma lista pessoal. Só a
-     * Base de dados grava de forma confiável se a busca achou algo ou não (a API
-     * responde de forma assíncrona), então é a única fonte aqui por enquanto.
+     * Agregado entre todos os usuários da plataforma (não só o usuário atual) — a ideia é
+     * dar pro SuperAdmin um radar do que falta cadastrar, não uma lista pessoal. Por isso
+     * essa página só existe no painel super-admin (ver SuperAdminPanelProvider), nunca no
+     * painel do vendedor — um vendedor não pode ver termos buscados por outros
+     * vendedores/clientes da plataforma. Só a Base de dados grava de forma confiável se a
+     * busca achou algo ou não (a API responde de forma assíncrona), então é a única fonte
+     * aqui por enquanto.
      */
     protected function getHeaderActions(): array
     {

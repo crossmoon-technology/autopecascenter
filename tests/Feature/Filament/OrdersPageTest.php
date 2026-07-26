@@ -43,8 +43,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id, 'name' => 'João da Oficina']);
-        $order = Order::factory()->for($client)->create(['notes' => 'Entregar de manhã.']);
+        $client = User::factory()->clientOf($seller)->create(['name' => 'João da Oficina']);
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create(['notes' => 'Entregar de manhã.']);
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 3]);
 
         Livewire::test(Orders::class)
@@ -56,7 +56,7 @@ class OrdersPageTest extends TestCase
     public function test_new_orders_default_to_pending(): void
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
         $order = Order::factory()->for($client)->create();
 
@@ -68,12 +68,12 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $pending = Order::factory()->for($client)->create(['notes' => 'Pedido pendente']);
+        $client = User::factory()->clientOf($seller)->create();
+        $pending = Order::factory()->for($client)->for($seller, 'seller')->create(['notes' => 'Pedido pendente']);
         $pending->items()->create(['description' => 'Item', 'quantity' => 1]);
-        $processing = Order::factory()->for($client)->processing()->create(['notes' => 'Pedido processando']);
+        $processing = Order::factory()->for($client)->for($seller, 'seller')->processing()->create(['notes' => 'Pedido processando']);
         $processing->items()->create(['description' => 'Item', 'quantity' => 1]);
-        $finished = Order::factory()->for($client)->finished()->create(['notes' => 'Pedido finalizado']);
+        $finished = Order::factory()->for($client)->for($seller, 'seller')->finished()->create(['notes' => 'Pedido finalizado']);
         $finished->items()->create(['description' => 'Item', 'quantity' => 1]);
 
         Livewire::test(Orders::class)
@@ -86,7 +86,7 @@ class OrdersPageTest extends TestCase
     public function test_does_not_show_orders_from_another_sellers_clients(): void
     {
         $otherSeller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $otherClient = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $otherSeller->id, 'name' => 'Cliente de outro vendedor']);
+        $otherClient = User::factory()->clientOf($otherSeller)->create(['name' => 'Cliente de outro vendedor']);
         $order = Order::factory()->for($otherClient)->create();
         $order->items()->create(['description' => 'Peça de outro vendedor', 'quantity' => 1]);
 
@@ -97,20 +97,42 @@ class OrdersPageTest extends TestCase
             ->assertDontSee('Cliente de outro vendedor');
     }
 
+    /**
+     * O caso central do multi-vendedor: mesmo quando o cliente é compartilhado entre dois
+     * vendedores, cada pedido pertence a um único vendedor (seller_id) — nunca aparece
+     * pra quem não é o vendedor daquele pedido específico, mesmo sendo "dono" do cliente.
+     */
+    public function test_does_not_show_a_shared_clients_order_placed_with_another_seller(): void
+    {
+        $firstSeller = User::factory()->create(['role' => Role::SuperAdmin]);
+        $secondSeller = User::factory()->create(['role' => Role::SuperAdmin]);
+        $sharedClient = User::factory()->clientOf($firstSeller)->create();
+        $sharedClient->linkToSeller($secondSeller);
+
+        $orderForSecondSeller = Order::factory()->for($sharedClient)->for($secondSeller, 'seller')->create(['notes' => 'Pedido pro segundo vendedor']);
+        $orderForSecondSeller->items()->create(['description' => 'Item', 'quantity' => 1]);
+
+        $this->actingAs($firstSeller);
+
+        Livewire::test(Orders::class)
+            ->assertSuccessful()
+            ->assertDontSee('Pedido pro segundo vendedor');
+    }
+
     public function test_shows_guided_quotation_button_only_for_pending_or_processing_orders(): void
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
-        $pending = Order::factory()->for($client)->create();
+        $pending = Order::factory()->for($client)->for($seller, 'seller')->create();
         $pending->items()->create(['description' => 'Item pendente', 'quantity' => 1]);
 
         Livewire::test(Orders::class)
             ->assertTableActionVisible('startGuidedQuotation', $pending);
 
         $quotation = $seller->quotations()->create(['status' => QuotationStatus::Closed]);
-        $finished = Order::factory()->for($client)->finished()->create(['quotation_id' => $quotation->id]);
+        $finished = Order::factory()->for($client)->for($seller, 'seller')->finished()->create(['quotation_id' => $quotation->id]);
         $finished->items()->create(['description' => 'Item finalizado', 'quantity' => 1]);
 
         Livewire::test(Orders::class)
@@ -122,8 +144,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
 
         $component = Livewire::test(Orders::class);
@@ -138,8 +160,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
 
         $component = Livewire::test(Orders::class);
@@ -154,8 +176,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
 
         $component = Livewire::test(Orders::class);
@@ -172,8 +194,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
 
         Livewire::test(Orders::class)
@@ -193,8 +215,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
         $quotation = $seller->quotations()->create(['status' => QuotationStatus::Closed, 'name' => 'Cotação do João']);
         $order->update(['quotation_id' => $quotation->id]);
@@ -209,8 +231,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
 
         Livewire::test(Orders::class)
@@ -223,8 +245,8 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        $order = Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
         $quotation = $seller->quotations()->create(['status' => QuotationStatus::Closed, 'name' => 'Cotação do João']);
 
@@ -262,7 +284,7 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
 
         Livewire::test(Orders::class)
@@ -288,10 +310,10 @@ class OrdersPageTest extends TestCase
     public function test_create_order_action_client_options_are_scoped_to_this_sellers_invited_clients(): void
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $ownClient = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id, 'name' => 'Cliente Proprio']);
+        $ownClient = User::factory()->clientOf($seller)->create(['name' => 'Cliente Proprio']);
 
         $otherSeller = User::factory()->create(['role' => Role::SuperAdmin]);
-        User::factory()->create(['role' => Role::Client, 'invited_by_id' => $otherSeller->id, 'name' => 'Cliente Alheio']);
+        User::factory()->clientOf($otherSeller)->create(['name' => 'Cliente Alheio']);
 
         $this->actingAs($seller);
 
@@ -302,10 +324,30 @@ class OrdersPageTest extends TestCase
         $this->assertSame([$ownClient->id => 'Cliente Proprio'], $method->invoke($page));
     }
 
+    /**
+     * Um cliente vinculado a dois vendedores aparece nas opções de ambos — o vínculo N:N
+     * não é exclusivo (ver User::clients()).
+     */
+    public function test_create_order_action_client_options_include_a_client_shared_with_another_seller(): void
+    {
+        $firstSeller = User::factory()->create(['role' => Role::SuperAdmin]);
+        $secondSeller = User::factory()->create(['role' => Role::SuperAdmin]);
+        $sharedClient = User::factory()->clientOf($firstSeller)->create(['name' => 'Cliente Compartilhado']);
+        $sharedClient->linkToSeller($secondSeller);
+
+        $this->actingAs($secondSeller);
+
+        $page = new Orders;
+        $method = new \ReflectionMethod($page, 'clientOptionsForNewOrder');
+        $method->setAccessible(true);
+
+        $this->assertSame([$sharedClient->id => 'Cliente Compartilhado'], $method->invoke($page));
+    }
+
     public function test_create_order_action_refuses_a_client_not_invited_by_this_seller(): void
     {
         $otherSeller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $otherClient = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $otherSeller->id]);
+        $otherClient = User::factory()->clientOf($otherSeller)->create();
 
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
@@ -332,9 +374,9 @@ class OrdersPageTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
         $quotation = $seller->quotations()->create(['status' => QuotationStatus::Closed]);
-        $order = Order::factory()->for($client)->finished()->create(['quotation_id' => $quotation->id]);
+        $order = Order::factory()->for($client)->for($seller, 'seller')->finished()->create(['quotation_id' => $quotation->id]);
         $order->items()->create(['description' => 'Pastilha de freio', 'quantity' => 1]);
 
         Livewire::test(Orders::class)

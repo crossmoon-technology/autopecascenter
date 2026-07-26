@@ -23,6 +23,7 @@ class OrderFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'seller_id' => User::factory()->approvedSeller(),
             'status' => Status::Pending,
         ];
     }

@@ -40,10 +40,9 @@ class BuscasNavigationGroupTest extends TestCase
     public function test_configuracoes_is_always_the_last_navigation_group(): void
     {
         foreach (['admin', 'super-admin'] as $panel_id) {
-            $this->assertSame(
-                ['Buscas', 'Vendas', 'Configurações'],
-                Filament::getPanel($panel_id)->getNavigationGroups(),
-            );
+            $groups = Filament::getPanel($panel_id)->getNavigationGroups();
+
+            $this->assertSame('Configurações', end($groups));
         }
     }
 }

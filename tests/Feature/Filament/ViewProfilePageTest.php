@@ -33,8 +33,8 @@ class ViewProfilePageTest extends TestCase
 
     public function test_shows_who_invited_a_client(): void
     {
-        $seller = User::factory()->create(['role' => Role::Admin, 'name' => 'Vendedor Um']);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $seller = User::factory()->create(['role' => Role::Seller, 'name' => 'Vendedor Um']);
+        $client = User::factory()->clientOf($seller)->create();
         $this->actingAs($client);
 
         Livewire::test(ViewProfile::class)
@@ -44,7 +44,7 @@ class ViewProfilePageTest extends TestCase
 
     public function test_does_not_show_invited_by_for_a_seller(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->create(['role' => Role::Seller]));
 
         Livewire::test(ViewProfile::class)
             ->assertSuccessful()

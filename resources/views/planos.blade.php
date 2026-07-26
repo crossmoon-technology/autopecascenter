@@ -10,45 +10,46 @@
         <section class="pricing">
             <div class="container">
                 <div class="pricing__grid">
+                    @php
+                        $planDefaults = \App\Filament\Pages\Configuracoes\ApplicationSettings::planDefaults();
+                        $planSetting = fn (string $key) => \App\Models\Setting::get($key, $planDefaults[$key]);
+                        $planFeatures = fn (string $slug) => array_filter(array_map('trim', explode("\n", $planSetting("plan_{$slug}_features"))));
+                    @endphp
+
                     <div class="pricing__card">
-                        <h2 class="pricing__name">Básico</h2>
-                        <p class="pricing__description">Para quem está começando a cotar online.</p>
-                        <p class="pricing__price">R$ 99<span>/mês</span></p>
+                        <h2 class="pricing__name">{{ $planSetting('plan_trial_name') }}</h2>
+                        <p class="pricing__description">{{ $planSetting('plan_trial_description') }}</p>
+                        <p class="pricing__price">{{ $planSetting('plan_trial_price') }}<span>{{ $planSetting('plan_trial_price_period') }}</span></p>
+                        <a href="#agendar-demonstracao" class="btn btn--outline btn--block">Começar avaliação gratuita</a>
+                        <ul class="pricing__features">
+                            @foreach ($planFeatures('trial') as $feature)
+                                <li>{{ $feature }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <div class="pricing__card">
+                        <h2 class="pricing__name">{{ $planSetting('plan_basico_name') }}</h2>
+                        <p class="pricing__description">{{ $planSetting('plan_basico_description') }}</p>
+                        <p class="pricing__price">{{ $planSetting('plan_basico_price') }}<span>{{ $planSetting('plan_basico_price_period') }}</span></p>
                         <a href="#agendar-demonstracao" class="btn btn--outline btn--block">Começar agora</a>
                         <ul class="pricing__features">
-                            <li>Até 50 cotações por mês</li>
-                            <li>Acesso a fornecedores integrados</li>
-                            <li>Comparação de preços</li>
-                            <li>Suporte por e-mail</li>
+                            @foreach ($planFeatures('basico') as $feature)
+                                <li>{{ $feature }}</li>
+                            @endforeach
                         </ul>
                     </div>
 
                     <div class="pricing__card pricing__card--highlight">
                         <span class="pricing__badge">Mais popular</span>
-                        <h2 class="pricing__name">Profissional</h2>
-                        <p class="pricing__description">Para equipes que vendem todos os dias.</p>
-                        <p class="pricing__price">R$ 249<span>/mês</span></p>
+                        <h2 class="pricing__name">{{ $planSetting('plan_profissional_name') }}</h2>
+                        <p class="pricing__description">{{ $planSetting('plan_profissional_description') }}</p>
+                        <p class="pricing__price">{{ $planSetting('plan_profissional_price') }}<span>{{ $planSetting('plan_profissional_price_period') }}</span></p>
                         <a href="#agendar-demonstracao" class="btn btn--solid btn--block">Começar agora</a>
                         <ul class="pricing__features">
-                            <li>Cotações ilimitadas</li>
-                            <li>Todos os fornecedores integrados</li>
-                            <li>Comparação e histórico de preços</li>
-                            <li>Relatórios e métricas de vendas</li>
-                            <li>Suporte prioritário</li>
-                        </ul>
-                    </div>
-
-                    <div class="pricing__card">
-                        <h2 class="pricing__name">Empresarial</h2>
-                        <p class="pricing__description">Para redes e operações de grande porte.</p>
-                        <p class="pricing__price">Sob consulta</p>
-                        <a href="#agendar-demonstracao" class="btn btn--outline btn--block">Falar com vendas</a>
-                        <ul class="pricing__features">
-                            <li>Tudo do plano Profissional</li>
-                            <li>Múltiplas filiais e usuários</li>
-                            <li>Integrações personalizadas</li>
-                            <li>Gerente de conta dedicado</li>
-                            <li>Treinamento da equipe</li>
+                            @foreach ($planFeatures('profissional') as $feature)
+                                <li>{{ $feature }}</li>
+                            @endforeach
                         </ul>
                     </div>
                 </div>

@@ -11,8 +11,8 @@ use Illuminate\Support\Collection;
 /**
  * Widget do Painel de Controle — gráfico de barra de pedidos por status, com os cards
  * de contagem na mesma seção, todos reagindo ao mesmo filtro de período. Escopado do
- * mesmo jeito que App\Filament\Pages\Buscas\Orders: só pedidos de clientes convidados
- * pelo vendedor logado.
+ * mesmo jeito que App\Filament\Pages\Buscas\Orders: só pedidos de clientes vinculados
+ * ao vendedor logado.
  *
  * Extends ChartWidget (em vez de montar o gráfico à mão) pra herdar de graça o
  * mecanismo de atualização reativa dele — o hook rendering()/updateChartData() já

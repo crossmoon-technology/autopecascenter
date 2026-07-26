@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Filament;
 
-use App\Enums\Role;
 use App\Filament\Pages\Buscas\Iframes;
 use App\Filament\Pages\Buscas\Orders;
 use App\Filament\Pages\Configuracoes\ManufacturerPreferences;
@@ -26,7 +25,7 @@ class PageHelpActionTest extends TestCase
 
     public function test_dashboard_shows_the_help_modal(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->approvedSeller()->create());
 
         $component = Livewire::test(Dashboard::class)->mountAction('help')->assertActionMounted('help');
 
@@ -35,7 +34,7 @@ class PageHelpActionTest extends TestCase
 
     public function test_iframes_shows_the_help_modal(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->approvedSeller()->create());
 
         $component = Livewire::test(Iframes::class)->mountAction('help')->assertActionMounted('help');
 
@@ -44,7 +43,7 @@ class PageHelpActionTest extends TestCase
 
     public function test_orders_shows_the_help_modal(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->approvedSeller()->create());
 
         $component = Livewire::test(Orders::class)->mountAction('help')->assertActionMounted('help');
 
@@ -53,7 +52,7 @@ class PageHelpActionTest extends TestCase
 
     public function test_manufacturer_preferences_shows_the_help_modal(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->approvedSeller()->create());
 
         $component = Livewire::test(ManufacturerPreferences::class)->mountAction('help')->assertActionMounted('help');
 
@@ -62,7 +61,7 @@ class PageHelpActionTest extends TestCase
 
     public function test_informativos_list_shows_the_help_modal_alongside_the_default_actions(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin]));
+        $this->actingAs(User::factory()->approvedSeller()->create());
 
         $component = Livewire::test(ListInformativos::class)->mountAction('help')->assertActionMounted('help');
 

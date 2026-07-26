@@ -28,10 +28,10 @@ class PendingOrdersIndicatorTest extends TestCase
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
 
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        Order::factory()->for($client)->create();
-        Order::factory()->for($client)->processing()->create();
-        Order::factory()->for($client)->finished()->create();
+        $client = User::factory()->clientOf($seller)->create();
+        Order::factory()->for($client)->for($seller, 'seller')->create();
+        Order::factory()->for($client)->for($seller, 'seller')->processing()->create();
+        Order::factory()->for($client)->for($seller, 'seller')->finished()->create();
 
         Livewire::test(PendingOrdersIndicator::class)
             ->assertSuccessful()
@@ -41,7 +41,7 @@ class PendingOrdersIndicatorTest extends TestCase
     public function test_does_not_count_another_sellers_clients_orders(): void
     {
         $otherSeller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $otherClient = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $otherSeller->id]);
+        $otherClient = User::factory()->clientOf($otherSeller)->create();
         Order::factory()->for($otherClient)->create();
 
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));

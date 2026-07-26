@@ -42,12 +42,12 @@ class OrdersOverviewTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
-        Order::factory()->for($client)->create();
-        Order::factory()->for($client)->processing()->create();
-        Order::factory()->for($client)->finished()->create();
-        Order::factory()->for($client)->cancelled()->create();
+        Order::factory()->for($client)->for($seller, 'seller')->create();
+        Order::factory()->for($client)->for($seller, 'seller')->processing()->create();
+        Order::factory()->for($client)->for($seller, 'seller')->finished()->create();
+        Order::factory()->for($client)->for($seller, 'seller')->cancelled()->create();
 
         $counts = Livewire::test(OrdersOverview::class)->instance()->statusCounts();
 
@@ -61,11 +61,11 @@ class OrdersOverviewTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
-        Order::factory()->for($client)->create();
-        Order::factory()->for($client)->create();
-        Order::factory()->for($client)->processing()->create();
+        Order::factory()->for($client)->for($seller, 'seller')->create();
+        Order::factory()->for($client)->for($seller, 'seller')->create();
+        Order::factory()->for($client)->for($seller, 'seller')->processing()->create();
 
         $method = new \ReflectionMethod(OrdersOverview::class, 'getData');
         $method->setAccessible(true);
@@ -81,10 +81,10 @@ class OrdersOverviewTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
-        Order::factory()->for($client)->create();
-        $lastMonth = Order::factory()->for($client)->create();
+        Order::factory()->for($client)->for($seller, 'seller')->create();
+        $lastMonth = Order::factory()->for($client)->for($seller, 'seller')->create();
         $lastMonth->timestamps = false;
         $lastMonth->created_at = now()->subMonth();
         $lastMonth->save();
@@ -98,9 +98,9 @@ class OrdersOverviewTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
-        $order = Order::factory()->for($client)->create();
+        $order = Order::factory()->for($client)->for($seller, 'seller')->create();
         $order->timestamps = false;
         $order->created_at = now()->subYears(2);
         $order->save();
@@ -116,14 +116,14 @@ class OrdersOverviewTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
+        $client = User::factory()->clientOf($seller)->create();
 
-        $recent = Order::factory()->for($client)->create();
+        $recent = Order::factory()->for($client)->for($seller, 'seller')->create();
         $recent->timestamps = false;
         $recent->created_at = now()->subDays(10);
         $recent->save();
 
-        $old = Order::factory()->for($client)->create();
+        $old = Order::factory()->for($client)->for($seller, 'seller')->create();
         $old->timestamps = false;
         $old->created_at = now()->subDays(40);
         $old->save();
@@ -138,7 +138,7 @@ class OrdersOverviewTest extends TestCase
     public function test_does_not_count_orders_from_another_sellers_clients(): void
     {
         $otherSeller = User::factory()->create(['role' => Role::SuperAdmin]);
-        $otherClient = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $otherSeller->id]);
+        $otherClient = User::factory()->clientOf($otherSeller)->create();
         Order::factory()->for($otherClient)->create();
 
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
@@ -150,8 +150,8 @@ class OrdersOverviewTest extends TestCase
     {
         $seller = User::factory()->create(['role' => Role::SuperAdmin]);
         $this->actingAs($seller);
-        $client = User::factory()->create(['role' => Role::Client, 'invited_by_id' => $seller->id]);
-        Order::factory()->for($client)->create();
+        $client = User::factory()->clientOf($seller)->create();
+        Order::factory()->for($client)->for($seller, 'seller')->create();
 
         $component = Livewire::test(OrdersOverview::class)->set('filter', 'not-a-real-period');
 
