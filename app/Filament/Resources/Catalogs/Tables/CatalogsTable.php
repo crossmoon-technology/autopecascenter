@@ -44,6 +44,12 @@ class CatalogsTable
                     ->label('Nome')
                     ->searchable()
                     ->alignLeft(),
+                TextColumn::make('slug')
+                    ->label('Slug')
+                    ->searchable()
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->alignLeft(),
                 TextColumn::make('descricao')
                     ->label('Descrição')
                     ->limit(40)
