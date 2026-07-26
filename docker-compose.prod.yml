@@ -1,0 +1,163 @@
+# Production compose file — deliberately leaner than docker-compose.yml (Laradock dev stack).
+# No mailhog, and `workspace` is hardened: no SSH/browsersync/vue-cli/vite ports published, no
+# Xdebug/Pcov/phpdbg, only Composer+Node installed (needed to run composer/npm/artisan by hand).
+#
+# Usage on the server:
+#   cp .env.production.example .env   # then fill in the real secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml exec workspace composer install --no-dev --optimize-autoloader
+#   docker compose -f docker-compose.prod.yml exec workspace npm ci && npm run build
+#   docker compose -f docker-compose.prod.yml exec workspace php artisan migrate --force
+#
+# docker compose reads `.env` from the current directory automatically for the variable
+# substitution below (COMPOSE_PROJECT_NAME, POSTGRES_*, PHP_VERSION, ...) — the same file is
+# also bind-mounted into the containers, so Laravel reads it as its own runtime .env, exactly
+# like the dev docker-compose.yml does.
+
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER:-bridge}
+  backend:
+    driver: ${NETWORKS_DRIVER:-bridge}
+
+volumes:
+  postgres_data:
+    driver: local
+
+services:
+  ### Workspace — build/ops shell only, does NOT serve traffic ############
+  # Hardened vs. the dev version: no ports published (SSH/browsersync/vue-cli/vite are all
+  # dev-only network conveniences — `docker compose exec` needs none of them), and Xdebug/Pcov/
+  # phpdbg forced off. Only Composer + Node are installed, since those are the actual build
+  # tools you need at deploy time. It has no `ports:` section at all, so nothing here is
+  # reachable from outside the docker network.
+  workspace:
+    container_name: "${COMPOSE_PROJECT_NAME}-workspace"
+    build:
+      context: .docker/workspace
+      args:
+        - LARADOCK_PHP_VERSION=${PHP_VERSION}
+        - INSTALL_NODE=true
+        - COMPOSER_GLOBAL_INSTALL=true
+        - COMPOSER_VERSION=2
+        - PUID=1000
+        - PGID=1000
+        # Never enable these in production:
+        - INSTALL_WORKSPACE_SSH=false
+        - INSTALL_XDEBUG=false
+        - INSTALL_PCOV=false
+        - INSTALL_PHPDBG=false
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+    tty: true
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  ### PHP-FPM ##############################################
+  php-fpm:
+    container_name: "${COMPOSE_PROJECT_NAME}-php"
+    build:
+      context: .docker/php-fpm
+      args:
+        - LARADOCK_PHP_VERSION=${PHP_VERSION}
+        - INSTALL_PGSQL=true
+        - INSTALL_PG_CLIENT=true
+        - PG_CLIENT_VERSION=${POSTGRES_CLIENT_VERSION}
+        - INSTALL_BCMATH=true
+        - INSTALL_INTL=true
+        - INSTALL_OPCACHE=true
+        # Never enable these in production:
+        - INSTALL_XDEBUG=false
+        - INSTALL_PCOV=false
+        - INSTALL_PHPDBG=false
+        - PUID=1000
+        - PGID=1000
+    volumes:
+      - ./.docker/php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
+      # opcache.validate_timestamps=0: PHP stops checking file mtimes on every request (perf win),
+      # but it also means code changes are NOT picked up until php-fpm is restarted — same class of
+      # "stale in-memory code" gotcha documented in CLAUDE.md for the queue worker. Restart php-fpm
+      # after every deploy: `docker compose -f docker-compose.prod.yml restart php-fpm`.
+      - ./.docker/php-fpm/opcache-production.ini:/usr/local/etc/php/conf.d/opcache.ini
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+    expose:
+      - "9000"
+    environment:
+      - TZ=${WORKSPACE_TIMEZONE:-America/Sao_Paulo}
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  ### PHP Worker (queue:work + schedule:run) ################
+  php-worker:
+    container_name: "${COMPOSE_PROJECT_NAME}-worker"
+    build:
+      context: .docker/php-worker
+      args:
+        - LARADOCK_PHP_VERSION=${PHP_VERSION}
+        - INSTALL_PGSQL=true
+        - INSTALL_BCMATH=true
+        - INSTALL_INTL=true
+        - PUID=1000
+        - PGID=1000
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - .docker/php-worker/supervisord.d:/etc/supervisord.d
+    environment:
+      - TZ=${WORKSPACE_TIMEZONE:-America/Sao_Paulo}
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  ### NGINX Server #########################################
+  nginx:
+    container_name: "${COMPOSE_PROJECT_NAME}-nginx"
+    build:
+      context: .docker/nginx
+      dockerfile: ${NGINX_DOCKERFILE:-Dockerfile}
+      args:
+        - PHP_UPSTREAM_CONTAINER=php-fpm
+        - PHP_UPSTREAM_PORT=9000
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+      - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+      - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+    ports:
+      - "${NGINX_HOST_HTTP_PORT:-80}:80"
+      - "${NGINX_HOST_HTTPS_PORT:-443}:443"
+    restart: unless-stopped
+    depends_on:
+      - php-fpm
+    networks:
+      - frontend
+      - backend
+
+  ### PostgreSQL ###########################################
+  postgres:
+    container_name: "${COMPOSE_PROJECT_NAME}-postgresql"
+    build:
+      context: .docker/postgres
+      args:
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: unless-stopped
+    # No host port published on purpose — only php-fpm/php-worker (same `backend` network)
+    # can reach postgres. Uncomment below only if you need direct psql/backup access from
+    # the host, and prefer binding to localhost over a public port:
+    # ports:
+    #   - "127.0.0.1:${POSTGRES_PORT}:5432"
+    networks:
+      - backend
