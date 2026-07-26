@@ -62,7 +62,7 @@
 
                 <div class="login-form__remember">
                     <label class="login-form__checkbox-label">
-                        <input type="checkbox" name="remember" id="remember" class="login-form__checkbox">
+                        <input type="checkbox" name="remember" id="remember" value="1" class="login-form__checkbox">
                         <span>Lembrar-me</span>
                     </label>
                 </div>
