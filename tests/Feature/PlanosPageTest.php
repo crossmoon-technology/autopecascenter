@@ -24,6 +24,14 @@ class PlanosPageTest extends TestCase
         $response->assertDontSee('Empresarial');
     }
 
+    public function test_comecar_avaliacao_gratuita_links_straight_to_seller_registration(): void
+    {
+        $response = $this->get(route('planos'));
+
+        $response->assertOk();
+        $response->assertSee('href="'.route('register.seller').'" class="btn btn--outline btn--block">Começar avaliação gratuita', false);
+    }
+
     public function test_page_renders_saved_plan_values_instead_of_defaults(): void
     {
         Setting::set('plan_basico_price', 'R$ 119');

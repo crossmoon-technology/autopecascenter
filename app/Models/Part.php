@@ -25,6 +25,44 @@ class Part extends Model
         ];
     }
 
+    /**
+     * Todo código (próprio e de conversoes) é normalizado — maiúsculo, sem espaço —
+     * antes de salvar, não só na importação/atualização de catálogo: cobre qualquer
+     * caminho que crie/edite uma Part (inclusive futuro), sem depender de cada chamador
+     * lembrar de normalizar. A busca usa a mesma normalização (ver
+     * App\Filament\Pages\Buscas\CatalogDatabaseSearch e
+     * App\Services\PartEquivalence\RebuildPartEquivalences) pra continuar batendo.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Part $part): void {
+            $part->codigo = self::normalizeCode($part->codigo);
+            $part->conversoes = self::normalizeConversoes($part->conversoes);
+        });
+    }
+
+    public static function normalizeCode(string $value): string
+    {
+        return strtoupper(preg_replace('/\s+/', '', trim($value)));
+    }
+
+    /**
+     * Normaliza só os valores-folha (os códigos em si) de uma estrutura de conversoes,
+     * preservando as chaves (nome da marca, ex: "NAKATA") intactas — não são códigos.
+     */
+    public static function normalizeConversoes(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return collect($value)->map(fn ($item) => self::normalizeConversoes($item))->all();
+        }
+
+        if ($value === null) {
+            return null;
+        }
+
+        return self::normalizeCode((string) $value);
+    }
+
     public function catalog(): BelongsTo
     {
         return $this->belongsTo(Catalog::class);
@@ -33,6 +71,17 @@ class Part extends Model
     public function favoriteLists(): BelongsToMany
     {
         return $this->belongsToMany(FavoriteList::class, 'favorite_list_part')->withTimestamps()->withPivot('note');
+    }
+
+    /**
+     * Pareamento direto pré-computado (ver App\Services\PartEquivalence\RebuildPartEquivalences),
+     * recalculado a cada import/atualização de catálogo — nunca em tempo de busca. As
+     * duas direções são gravadas em part_equivalences, então essa relação já é simétrica
+     * sem precisar de OR/UNION.
+     */
+    public function equivalentParts(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'part_equivalences', 'part_id', 'equivalent_part_id')->withTimestamps();
     }
 
     /**

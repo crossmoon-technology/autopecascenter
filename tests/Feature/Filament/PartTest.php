@@ -40,7 +40,8 @@ class PartTest extends TestCase
         $part = Part::firstOrFail();
         $this->assertSame($catalog->getKey(), $part->catalog_id);
         $this->assertSame(['GS440'], $part->conversoes['MONROE']);
-        $this->assertSame(['MG 16214', 'MG 16215'], $part->conversoes['NAKATA']);
+        // Normalizado ao salvar (ver Part::booted()): maiúsculo, sem espaço.
+        $this->assertSame(['MG16214', 'MG16215'], $part->conversoes['NAKATA']);
         $this->assertSame('MOLA A GÁS', $part->atributos['descricao']);
         $this->assertSame('PORTA MALAS', $part->atributos['posicao']);
     }

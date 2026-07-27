@@ -20,7 +20,7 @@
                         <h2 class="pricing__name">{{ $planSetting('plan_trial_name') }}</h2>
                         <p class="pricing__description">{{ $planSetting('plan_trial_description') }}</p>
                         <p class="pricing__price">{{ $planSetting('plan_trial_price') }}<span>{{ $planSetting('plan_trial_price_period') }}</span></p>
-                        <a href="#agendar-demonstracao" class="btn btn--outline btn--block">Começar avaliação gratuita</a>
+                        <a href="{{ route('register.seller') }}" class="btn btn--outline btn--block">Começar avaliação gratuita</a>
                         <ul class="pricing__features">
                             @foreach ($planFeatures('trial') as $feature)
                                 <li>{{ $feature }}</li>

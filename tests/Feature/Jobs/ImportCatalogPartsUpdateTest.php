@@ -7,6 +7,7 @@ use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
 use App\Models\Part;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -57,6 +58,34 @@ class ImportCatalogPartsUpdateTest extends TestCase
         ImportCatalogPartsUpdate::dispatchSync($catalog, $updateFile);
 
         $this->assertSame(1, Part::query()->where('catalog_id', $catalog->id)->count());
+    }
+
+    public function test_indexes_reference_codes_only_for_the_newly_created_parts(): void
+    {
+        Storage::fake('local');
+        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::Imported]);
+        $existing = Part::factory()->create([
+            'catalog_id' => $catalog->id,
+            'codigo' => '16088',
+            'conversoes' => [],
+        ]);
+
+        $updateFile = 'catalogs/updates/update.jsonl';
+        Storage::disk('local')->put($updateFile, implode("\n", [
+            json_encode(['codigo' => '16088', 'descricao' => 'Ignorado, código já existe']),
+            json_encode(['codigo' => '16090', 'conversoes' => ['NAKATA' => ['MG 90000']]]),
+        ]));
+
+        ImportCatalogPartsUpdate::dispatchSync($catalog, $updateFile);
+
+        // A peça já existente não foi tocada pelo firstOrCreate — não deve ganhar um
+        // índice novo (se já tinha algum, continua o mesmo de antes; aqui nunca teve).
+        $this->assertSame(0, DB::table('part_reference_codes')->where('part_id', $existing->id)->count());
+
+        $newPart = Part::query()->where('codigo', '16090')->firstOrFail();
+        $tokens = DB::table('part_reference_codes')->where('part_id', $newPart->id)->pluck('token');
+        $this->assertTrue($tokens->contains('16090'));
+        $this->assertTrue($tokens->contains('MG90000'));
     }
 
     public function test_leaves_the_catalog_imported_when_done(): void

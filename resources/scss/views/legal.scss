@@ -1,0 +1,68 @@
+@use "../settings/colors";
+@use "../settings/typography";
+@use "../settings/grid";
+
+.legal {
+    padding: 4rem 0 5rem;
+
+    .legal__updated-at {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-sm;
+        color: colors.$color-gray;
+        margin-bottom: 2.5rem;
+    }
+
+    .legal__content {
+        max-width: 46rem;
+        margin: 0 auto;
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-sm;
+        color: colors.$color-gray-dark;
+        line-height: typography.$line-height-loose;
+
+        h2 {
+            font-size: typography.$font-size-lg;
+            font-weight: typography.$font-weight-bold;
+            color: colors.$color-text;
+            margin: 2.5rem 0 1rem;
+
+            &:first-child {
+                margin-top: 0;
+            }
+        }
+
+        h3 {
+            font-size: typography.$font-size-md;
+            font-weight: typography.$font-weight-semibold;
+            color: colors.$color-text;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        p {
+            margin: 0 0 1rem;
+        }
+
+        ul {
+            margin: 0 0 1rem;
+            padding-left: 1.25rem;
+
+            li {
+                list-style: disc;
+                margin-bottom: 0.375rem;
+            }
+        }
+
+        a {
+            color: colors.$color-accent;
+            text-decoration: underline;
+        }
+
+        strong {
+            color: colors.$color-text;
+        }
+    }
+
+    @media (max-width: grid.$medium-size) {
+        padding: 3rem 0 3.5rem;
+    }
+}

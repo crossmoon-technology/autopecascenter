@@ -68,7 +68,9 @@ class History extends Page implements HasTable
             })
             ->recordUrl(fn (SearchHistory $record): string => match ($record->method) {
                 Method::Api => Api::getUrl(['codigo' => $record->query]),
-                Method::Database => CatalogDatabaseSearch::getUrl(['codigo' => $record->query]),
+                // Equivalence é o método legado do extinto "Achar código original" — essa
+                // busca vive só na Base de dados agora, então linhas antigas caem aqui.
+                Method::Database, Method::Equivalence => CatalogDatabaseSearch::getUrl(['codigo' => $record->query]),
             })
             ->columns([
                 TextColumn::make('query')
