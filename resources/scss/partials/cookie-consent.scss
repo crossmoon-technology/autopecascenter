@@ -1,0 +1,58 @@
+@use "../settings/colors";
+@use "../settings/typography";
+@use "../settings/grid";
+
+// Overlay bloqueante: fica no DOM sempre, mas display:none por padrão (ver
+// resources/js/app.js) — só é revelado via .is-visible quando o visitante ainda não
+// aceitou. Sem essa checagem em JS antes de exibir, quem já aceitou veria o modal
+// piscar a cada carregamento de página.
+.cookie-consent {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000000000;
+    background: rgba(0, 0, 0, 0.75);
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+
+    &.is-visible {
+        display: flex;
+    }
+
+    .cookie-consent__card {
+        width: 100%;
+        max-width: 30rem;
+        background: colors.$color-white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        padding: 2rem;
+    }
+
+    .cookie-consent__title {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-lg;
+        font-weight: typography.$font-weight-bold;
+        color: colors.$color-text;
+        margin: 0 0 0.75rem;
+    }
+
+    .cookie-consent__text {
+        font-family: typography.$font-family-base;
+        font-size: typography.$font-size-sm;
+        color: colors.$color-gray-dark;
+        line-height: typography.$line-height-loose;
+        margin: 0 0 1.5rem;
+
+        a {
+            color: colors.$color-accent;
+            text-decoration: underline;
+        }
+    }
+
+    @media (max-width: grid.$medium-size) {
+        .cookie-consent__card {
+            padding: 1.5rem;
+        }
+    }
+}

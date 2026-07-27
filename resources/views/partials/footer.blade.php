@@ -87,6 +87,15 @@ $hasContact = filled($contactPhone) || filled($contactEmail) || filled($contactA
                 </ul>
             </div>
 
+            <div class="footer__column">
+                <h3 class="footer__heading">Legal</h3>
+                <ul class="footer__links">
+                    <li><a href="{{ route('privacy-policy') }}">Política de Privacidade</a></li>
+                    <li><a href="{{ route('cookie-policy') }}">Política de Cookies</a></li>
+                    <li><a href="{{ route('terms-of-use') }}">Termos de Uso</a></li>
+                </ul>
+            </div>
+
             @if ($hasContact)
                 <div class="footer__column">
                     <h3 class="footer__heading">Contato</h3>
