@@ -33,6 +33,15 @@ class HomePageTest extends TestCase
         $response->assertSee('Ir para o painel');
     }
 
+    public function test_the_iniciar_avaliacao_buttons_link_straight_to_seller_registration(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('href="'.route('register.seller').'" class="btn btn--solid">', false);
+        $response->assertSee('href="'.route('register.seller').'" class="btn btn--solid btn--block">Iniciar avaliação', false);
+    }
+
     public function test_shows_a_logout_button_when_authenticated(): void
     {
         $this->actingAs(User::factory()->create(['role' => Role::Client]));
