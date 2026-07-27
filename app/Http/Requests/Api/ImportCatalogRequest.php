@@ -24,7 +24,8 @@ class ImportCatalogRequest extends FormRequest
             ],
             'file' => ['required', 'file', 'extensions:jsonl', new ValidJsonl],
             'informativos' => ['sometimes', 'array'],
-            'informativos.*' => ['file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
+            // Keep in sync with the 25600 KB (25M) cap in InformativosTable/InformativosRelationManager.
+            'informativos.*' => ['file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:25600'],
         ];
     }
 }

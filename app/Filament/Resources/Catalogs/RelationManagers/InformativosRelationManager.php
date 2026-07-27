@@ -70,7 +70,7 @@ class InformativosRelationManager extends RelationManager
                             ->disk('public')
                             ->directory('catalogs/informativos')
                             ->acceptedFileTypes(['application/pdf', 'image/png', 'image/jpeg', 'image/webp'])
-                            ->maxSize(10240)
+                            ->maxSize(25600)
                             ->storeFileNamesIn('original_file_names')
                             ->required()
                             ->helperText('Selecione um ou mais arquivos para enviar de uma vez.'),
