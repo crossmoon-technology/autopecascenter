@@ -15,6 +15,7 @@
     @include('partials.header')
     @yield('content')
     @include('partials.footer')
+    @include('partials.cookie-consent')
 </body>
 
 </html>

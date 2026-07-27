@@ -57,4 +57,17 @@ class FooterTest extends TestCase
         $response->assertSee(route('perguntas-frequentes'), false);
         $response->assertSee('Perguntas frequentes');
     }
+
+    public function test_shows_a_legal_column_with_links_to_the_lgpd_pages(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee(route('privacy-policy'), false);
+        $response->assertSee(route('cookie-policy'), false);
+        $response->assertSee(route('terms-of-use'), false);
+        $response->assertSee('Política de Privacidade');
+        $response->assertSee('Política de Cookies');
+        $response->assertSee('Termos de Uso');
+    }
 }

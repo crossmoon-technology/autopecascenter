@@ -105,6 +105,23 @@ class HistoryPageTest extends TestCase
         $this->assertSame(Api::getUrl(['codigo' => 'HF-21']), $url);
     }
 
+    public function test_clicking_a_legacy_equivalence_search_row_links_to_the_database_page_prefilled(): void
+    {
+        // Method::Equivalence é o método legado do extinto "Achar código original" —
+        // essa busca vive só na Base de dados agora, então linhas antigas caem lá.
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $record = SearchHistory::factory()->create([
+            'user_id' => $user->id,
+            'query' => 'MG 19038',
+            'method' => Method::Equivalence,
+        ]);
+        $this->actingAs($user);
+
+        $url = Livewire::test(History::class)->instance()->getTable()->getRecordUrl($record);
+
+        $this->assertSame(CatalogDatabaseSearch::getUrl(['codigo' => 'MG 19038']), $url);
+    }
+
     public function test_only_shows_the_100_most_recent_searches(): void
     {
         $user = User::factory()->create(['role' => Role::SuperAdmin]);

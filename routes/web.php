@@ -40,6 +40,18 @@ Route::get('/perguntas-frequentes', function () {
     return view('faq');
 })->name('perguntas-frequentes');
 
+Route::get('/politica-de-privacidade', function () {
+    return view('politica-de-privacidade');
+})->name('privacy-policy');
+
+Route::get('/politica-de-cookies', function () {
+    return view('politica-de-cookies');
+})->name('cookie-policy');
+
+Route::get('/termos-de-uso', function () {
+    return view('termos-de-uso');
+})->name('terms-of-use');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt')->middleware('throttle:6,1');

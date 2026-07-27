@@ -150,7 +150,8 @@ class GuidedQuotationPageTest extends TestCase
 
         Livewire::test(GuidedQuotation::class, ['order' => $order->id])
             ->call('addAndContinue', $part->id)
-            ->assertSee('3x HG 41297')
+            // Codigo normalizado ao salvar (ver Part::booted()): maiúsculo, sem espaço.
+            ->assertSee('3x HG41297')
             ->assertSee('Cofap')
             ->assertSee('Salvar cotação');
     }

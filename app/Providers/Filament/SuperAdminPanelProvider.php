@@ -27,6 +27,7 @@ use App\Filament\Resources\Informativos\InformativoResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
 use App\Filament\Resources\Sellers\SellerResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Filament\Widgets\OrdersOverview;
 use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -80,6 +81,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 PartResource::class,
                 InformativoResource::class,
                 SellerResource::class,
+                UserResource::class,
             ])
             ->discoverResources(in: app_path('Filament/SuperAdmin/Resources'), for: 'App\Filament\SuperAdmin\Resources')
             ->discoverPages(in: app_path('Filament/SuperAdmin/Pages'), for: 'App\Filament\SuperAdmin\Pages')

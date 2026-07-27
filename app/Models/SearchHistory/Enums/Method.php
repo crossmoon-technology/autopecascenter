@@ -9,12 +9,14 @@ enum Method: string implements HasColor, HasLabel
 {
     case Api = 'api';
     case Database = 'base';
+    case Equivalence = 'equivalencia';
 
     public function getLabel(): string
     {
         return match ($this) {
             self::Api => 'API',
             self::Database => 'Base de dados',
+            self::Equivalence => 'Código original',
         };
     }
 
@@ -23,6 +25,7 @@ enum Method: string implements HasColor, HasLabel
         return match ($this) {
             self::Api => 'info',
             self::Database => 'success',
+            self::Equivalence => 'warning',
         };
     }
 }

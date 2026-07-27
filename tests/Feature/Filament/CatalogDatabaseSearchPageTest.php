@@ -13,6 +13,7 @@ use App\Models\QuotationItem\Enums\Source;
 use App\Models\SearchHistory;
 use App\Models\SearchHistory\Enums\Method;
 use App\Models\User;
+use App\Services\PartEquivalence\RebuildPartEquivalences;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -175,8 +176,11 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->assertDatabaseHas('search_histories', ['user_id' => $user->id, 'query' => '16088']);
     }
 
-    public function test_search_without_a_selected_manufacturer_is_not_recorded_in_history(): void
+    public function test_search_without_a_selected_manufacturer_is_still_recorded_in_history(): void
     {
+        // "Peças exatas" ignora o checkbox de fabricantes de propósito (busca em todos
+        // sempre) — então uma busca sem nenhum fabricante marcado ainda é uma busca de
+        // verdade, e continua sendo registrada no histórico.
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
         Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
@@ -186,7 +190,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
             ->set('data.codigo', '16088')
             ->call('search');
 
-        $this->assertSame(0, SearchHistory::query()->count());
+        $this->assertSame(1, SearchHistory::query()->count());
     }
 
     public function test_search_does_not_create_or_change_any_records(): void
@@ -391,7 +395,8 @@ class CatalogDatabaseSearchPageTest extends TestCase
             ->call('search')
             ->assertSee('16006')
             ->assertSee('NAKATA')
-            ->assertSee('MG 19038');
+            // Normalizado ao salvar (ver Part::booted()): maiúsculo, sem espaço.
+            ->assertSee('MG19038');
     }
 
     public function test_equivalentes_search_type_does_not_match_the_parts_own_codigo(): void
@@ -754,5 +759,255 @@ class CatalogDatabaseSearchPageTest extends TestCase
             'query' => 'nao-existe',
             'found_results' => false,
         ]);
+    }
+
+    public function test_pecas_exatas_finds_a_part_by_its_own_codigo(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey($part->id)->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->assertSet("exactResults.{$manufacturer->id}.0.id", $part->id)
+            ->assertSee('Peças exatas');
+    }
+
+    public function test_pecas_exatas_finds_a_part_regardless_of_the_typed_case_or_spacing(): void
+    {
+        // A peça é salva normalizada (MG19038, sem espaço — ver Part::booted()), mas o
+        // vendedor pode digitar do jeito que o cliente falou, com espaço e minúsculo.
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'MG19038', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey($part->id)->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'mg 19038'])
+            ->call('search')
+            ->assertSet("exactResults.{$manufacturer->id}.0.id", $part->id);
+    }
+
+    public function test_resultados_section_finds_a_part_regardless_of_the_typed_case_or_spacing(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'MG19038', 'conversoes' => []]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['tipo_busca' => SearchType::Codigo, 'codigo' => 'mg 19038'])
+            ->call('search')
+            ->assertSee('MG19038');
+    }
+
+    public function test_pecas_exatas_ignores_the_manufacturer_checkbox(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey($part->id)->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->assertSet("exactResults.{$manufacturer->id}.0.id", $part->id)
+            ->assertSet('results', []);
+    }
+
+    public function test_pecas_exatas_does_not_match_a_longer_code(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $exact = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'GH 123', 'conversoes' => []]);
+        $longer = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'GH 1234', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey([$exact->id, $longer->id])->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'GH 123'])
+            ->call('search')
+            ->assertSet("exactResults.{$manufacturer->id}", fn ($parts) => $parts->count() === 1 && $parts->first()->id === $exact->id);
+    }
+
+    public function test_pecas_exatas_shows_chained_equivalents_across_manufacturers(): void
+    {
+        $bosch = Manufacturer::factory()->create(['name' => 'Bosch', 'is_active' => true]);
+        $nakata = Manufacturer::factory()->create(['name' => 'Nakata', 'is_active' => true]);
+        $boschCatalog = Catalog::factory()->create(['manufacturer_id' => $bosch->getKey(), 'is_active' => true]);
+        $nakataCatalog = Catalog::factory()->create(['manufacturer_id' => $nakata->getKey(), 'is_active' => true]);
+
+        $boschPart = Part::factory()->create([
+            'catalog_id' => $boschCatalog->getKey(),
+            'codigo' => 'BOSCH-001',
+            'conversoes' => ['NAKATA' => ['MG 19038']],
+        ]);
+        $nakataPart = Part::factory()->create(['catalog_id' => $nakataCatalog->getKey(), 'codigo' => 'MG 19038', 'conversoes' => []]);
+
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey([$boschPart->id, $nakataPart->id])->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'BOSCH-001'])
+            ->call('search')
+            ->assertSet("exactResults.{$bosch->id}.0.id", $boschPart->id)
+            ->assertSet("exactResults.{$nakata->id}.0.id", $nakataPart->id);
+    }
+
+    public function test_clicking_an_equivalence_chip_in_pecas_exatas_searches_for_it(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $boschPart = Part::factory()->create([
+            'catalog_id' => $catalog->getKey(),
+            'codigo' => 'BOSCH-001',
+            'conversoes' => ['NAKATA' => ['MG 19038']],
+        ]);
+        $nakataPart = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'MG 19038', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey([$boschPart->id, $nakataPart->id])->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->call('searchFor', 'MG 19038')
+            ->assertSet('data.codigo', 'MG 19038')
+            ->assertSet("exactResults.{$manufacturer->id}.0.id", $nakataPart->id);
+    }
+
+    public function test_pecas_exatas_shows_a_notice_when_the_fallback_scan_was_used(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
+        // Não indexado de propósito.
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->assertSet('usedFallbackScan', true)
+            ->assertSee('ainda não está no índice rápido de busca');
+    }
+
+    public function test_pecas_exatas_does_not_show_the_fallback_notice_when_nothing_matches_at_all(): void
+    {
+        // Nenhuma peça com esse código existe (indexada ou não) — isso é um resultado
+        // normal de "não encontrado", não um sinal de índice desatualizado, então o
+        // aviso não deveria aparecer.
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'CODIGO-QUE-NAO-EXISTE'])
+            ->call('search')
+            ->assertSet('usedFallbackScan', false)
+            ->assertDontSee('ainda não está no índice rápido de busca');
+    }
+
+    public function test_pecas_exatas_ignores_parts_from_an_inactive_manufacturer(): void
+    {
+        $inactiveManufacturer = Manufacturer::factory()->create(['is_active' => false]);
+        $activeManufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        Catalog::factory()->create(['manufacturer_id' => $activeManufacturer->getKey(), 'is_active' => true]);
+        $inactiveCatalog = Catalog::factory()->create(['manufacturer_id' => $inactiveManufacturer->getKey(), 'is_active' => true]);
+        $part = Part::factory()->create(['catalog_id' => $inactiveCatalog->getKey(), 'codigo' => 'HIDDEN-99', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey($part->id)->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'HIDDEN-99'])
+            ->call('search')
+            ->assertSet('exactResults', []);
+    }
+
+    public function test_highlights_the_searched_term_inside_the_matching_codigo(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'GP33314', 'conversoes' => []]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'GP333'])
+            ->call('search')
+            ->assertSeeHtml('<mark class="pe-highlight">GP333</mark>14');
+    }
+
+    public function test_highlights_the_searched_term_inside_an_equivalence_value(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create([
+            'catalog_id' => $catalog->getKey(),
+            'codigo' => 'GP33314',
+            'conversoes' => ['NAKATA' => ['HG 41297']],
+        ]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['tipo_busca' => SearchType::Equivalentes, 'codigo' => 'HG 41297'])
+            ->call('search')
+            // Normalizado ao salvar (ver Part::booted()): maiúsculo, sem espaço — o
+            // termo buscado (com espaço) ainda bate graças ao \s* opcional em highlight().
+            ->assertSeeHtml('<mark class="pe-highlight">HG41297</mark>');
+    }
+
+    public function test_highlight_is_case_insensitive(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'GP33314', 'conversoes' => []]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'gp333'])
+            ->call('search')
+            ->assertSeeHtml('<mark class="pe-highlight">GP333</mark>14');
+    }
+
+    public function test_highlight_appears_in_pecas_exatas_too(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'GP33314', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey($part->id)->get());
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'GP33314'])
+            ->call('search')
+            ->assertSeeHtml('<mark class="pe-highlight">GP33314</mark>');
+    }
+
+    public function test_no_highlight_before_any_search_has_run(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $highlighted = Livewire::test(CatalogDatabaseSearch::class)->instance()->highlight('GP33314');
+
+        $this->assertSame('GP33314', $highlighted);
     }
 }

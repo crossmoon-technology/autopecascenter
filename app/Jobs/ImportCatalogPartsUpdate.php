@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
 use App\Models\Part;
+use App\Services\PartEquivalence\RebuildPartEquivalences;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -38,6 +39,8 @@ class ImportCatalogPartsUpdate implements ShouldQueue
         $file_exists = $disk->exists($this->file);
         $previous_update_file = $this->catalog->update_file;
 
+        $created_part_ids = [];
+
         try {
             if ($file_exists) {
                 foreach (preg_split('/\r\n|\r|\n/', $disk->get($this->file)) as $line) {
@@ -56,18 +59,35 @@ class ImportCatalogPartsUpdate implements ShouldQueue
                     $atributos = collect($data)->except(['codigo', 'conversoes'])->filter(fn ($value) => ! is_null($value));
 
                     // firstOrCreate: se o código já existe nesse catálogo, ignora — só
-                    // cria quando é realmente novo.
-                    Part::query()->firstOrCreate(
+                    // cria quando é realmente novo. Normaliza ANTES do firstOrCreate,
+                    // não só no saving() do model — o WHERE daqui precisa bater com o
+                    // valor já normalizado de uma peça existente, senão duas grafias do
+                    // "mesmo" código (ex: "mg 19038" no arquivo de atualização vs
+                    // "MG19038" já salvo) criam uma peça nova em vez de detectar como
+                    // já existente.
+                    $part = Part::query()->firstOrCreate(
                         [
                             'catalog_id' => $this->catalog->id,
-                            'codigo' => $data['codigo'],
+                            'codigo' => Part::normalizeCode($data['codigo']),
                         ],
                         [
-                            'conversoes' => $data['conversoes'] ?? null,
+                            'conversoes' => Part::normalizeConversoes($data['conversoes'] ?? null),
                             'atributos' => $atributos->isNotEmpty() ? $atributos->all() : null,
                         ]
                     );
+
+                    if ($part->wasRecentlyCreated) {
+                        $created_part_ids[] = $part->id;
+                    }
                 }
+
+                // Precisa ser feito no momento da importação, não em tempo de busca — ver
+                // App\Services\PartEquivalence\RebuildPartEquivalences. Só as peças
+                // realmente novas entram aqui — as ignoradas (código já existia) já têm
+                // seu pareamento calculado desde a importação original.
+                collect($created_part_ids)->chunk(500)->each(
+                    fn ($chunk) => app(RebuildPartEquivalences::class)->forParts(Part::query()->whereIn('id', $chunk)->get())
+                );
             }
         } finally {
             // O catálogo já estava Imported antes dessa atualização — sucesso ou falha,
