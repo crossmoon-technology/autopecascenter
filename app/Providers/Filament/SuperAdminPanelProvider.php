@@ -23,7 +23,6 @@ use App\Filament\Pages\Configuracoes\NoResultSearches;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Perfil\ViewProfile;
 use App\Filament\Resources\Catalogs\CatalogResource;
-use App\Filament\Resources\Informativos\InformativoResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
 use App\Filament\Resources\Sellers\SellerResource;
@@ -79,7 +78,6 @@ class SuperAdminPanelProvider extends PanelProvider
                 ManufacturerResource::class,
                 CatalogResource::class,
                 PartResource::class,
-                InformativoResource::class,
                 SellerResource::class,
                 UserResource::class,
             ])

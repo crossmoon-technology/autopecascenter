@@ -6,7 +6,6 @@ use App\Filament\Resources\Catalogs\Pages\CreateCatalog;
 use App\Filament\Resources\Catalogs\Pages\EditCatalog;
 use App\Filament\Resources\Catalogs\Pages\ListCatalogs;
 use App\Filament\Resources\Catalogs\Pages\ViewCatalog;
-use App\Filament\Resources\Catalogs\RelationManagers\InformativosRelationManager;
 use App\Filament\Resources\Catalogs\RelationManagers\PartsRelationManager;
 use App\Filament\Resources\Catalogs\Schemas\CatalogForm;
 use App\Filament\Resources\Catalogs\Tables\CatalogsTable;
@@ -40,7 +39,6 @@ class CatalogResource extends Resource
     public static function getRelations(): array
     {
         return [
-            InformativosRelationManager::class,
             PartsRelationManager::class,
         ];
     }

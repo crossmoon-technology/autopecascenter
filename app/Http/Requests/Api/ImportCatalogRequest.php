@@ -23,9 +23,6 @@ class ImportCatalogRequest extends FormRequest
                 Rule::exists('catalogs', 'slug')->whereNull('deleted_at'),
             ],
             'file' => ['required', 'file', 'extensions:jsonl', new ValidJsonl],
-            'informativos' => ['sometimes', 'array'],
-            // Keep in sync with the 25600 KB (25M) cap in InformativosTable/InformativosRelationManager.
-            'informativos.*' => ['file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:25600'],
         ];
     }
 }
