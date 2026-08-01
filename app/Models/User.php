@@ -19,6 +19,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 #[Fillable(['role', 'name', 'email', 'document', 'password', 'logo', 'registration_ip', 'plan', 'trial_ends_at', 'subscription_ends_at'])]
@@ -55,6 +56,14 @@ class User extends Authenticatable implements FilamentUser
         static::creating(function (User $user): void {
             if ($user->role === Role::Seller && $user->referral_code === null) {
                 $user->referral_code = self::generateUniqueReferralCode();
+            }
+        });
+
+        static::deleting(function (User $user): void {
+            // Arquivo só é removido do disco na exclusão permanente — o soft delete
+            // precisa manter o arquivo, já que a conta pode ser restaurada depois.
+            if ($user->isForceDeleting() && filled($user->logo)) {
+                Storage::disk('public')->delete($user->logo);
             }
         });
     }

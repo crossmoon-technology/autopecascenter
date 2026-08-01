@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['manufacturer_id', 'name', 'slug', 'descricao', 'file', 'extracted_at', 'is_active'])]
 class Catalog extends Model
@@ -38,12 +39,18 @@ class Catalog extends Model
 
     protected static function booted(): void
     {
-        // O force delete já é coberto pelo cascadeOnDelete() da FK no banco; aqui só
-        // cuidamos do soft delete, que é uma UPDATE e não dispara aquele cascade.
         static::deleting(function (Catalog $catalog): void {
-            if (! $catalog->isForceDeleting()) {
-                $catalog->parts()->delete();
+            // Arquivo só é removido do disco na exclusão permanente — o soft delete
+            // precisa manter o arquivo, já que o catálogo pode ser restaurado depois.
+            if ($catalog->isForceDeleting()) {
+                Storage::disk('local')->delete(array_filter([$catalog->file, $catalog->update_file]));
+
+                return;
             }
+
+            // O force delete já é coberto pelo cascadeOnDelete() da FK no banco; aqui só
+            // cuidamos do soft delete, que é uma UPDATE e não dispara aquele cascade.
+            $catalog->parts()->delete();
         });
     }
 }
