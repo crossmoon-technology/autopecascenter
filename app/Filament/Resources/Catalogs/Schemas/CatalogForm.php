@@ -76,7 +76,7 @@ class CatalogForm
                     ->visible(fn (string $operation, ?Catalog $record): bool => $operation === 'view' && filled($record?->update_file)),
                 DatePicker::make('extracted_at')
                     ->label('Extraído em')
-                    ->required(),
+                    ->helperText('Opcional — pode ser preenchido depois, quando o catálogo for importado.'),
                 Toggle::make('is_active')
                     ->label('Ativo')
                     ->required()

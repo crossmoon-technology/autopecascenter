@@ -48,6 +48,36 @@ class CatalogUploadTest extends TestCase
             ->assertHasNoFormErrors();
     }
 
+    public function test_accepts_a_catalog_without_an_extraction_date(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $manufacturer = Manufacturer::factory()->create();
+
+        Livewire::test(CreateCatalog::class)
+            ->fillForm([
+                'manufacturer_id' => $manufacturer->getKey(),
+                'name' => 'Catálogo sem data de extração',
+                'is_active' => false,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+    }
+
+    public function test_accepts_a_catalog_without_a_file_or_an_extraction_date(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $manufacturer = Manufacturer::factory()->create();
+
+        Livewire::test(CreateCatalog::class)
+            ->fillForm([
+                'manufacturer_id' => $manufacturer->getKey(),
+                'name' => 'Catálogo mínimo',
+                'is_active' => false,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+    }
+
     public function test_rejects_a_non_jsonl_catalog_file(): void
     {
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
