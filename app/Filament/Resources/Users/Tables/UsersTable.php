@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Tables;
 use App\Enums\Role;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
@@ -57,6 +58,9 @@ class UsersTable
                     ->label('Papel')
                     ->options(fn (): array => collect(Role::cases())->mapWithKeys(fn (Role $role) => [$role->value => $role->label()])->all()),
                 TrashedFilter::make(),
+            ])
+            ->recordActions([
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

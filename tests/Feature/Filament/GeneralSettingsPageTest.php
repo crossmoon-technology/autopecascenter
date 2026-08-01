@@ -75,4 +75,23 @@ class GeneralSettingsPageTest extends TestCase
             ->call('save')
             ->assertHasFormErrors(['logo']);
     }
+
+    /**
+     * Sem deleteUploadedFileUsing(), remover/substituir um arquivo já salvo só tira ele
+     * do estado do form — o arquivo físico ficava órfão no disco (ver GeneralSettings).
+     */
+    public function test_deleting_the_existing_logo_removes_it_from_disk(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['role' => Role::SuperAdmin, 'logo' => 'users/logos/existing.png']);
+        Storage::disk('public')->put($user->logo, 'fake-contents');
+        $this->actingAs($user);
+
+        $component = Livewire::test(GeneralSettings::class);
+        $fileKey = array_key_first($component->get('data.logo'));
+
+        $component->call('callSchemaComponentMethod', 'form.logo', 'deleteUploadedFile', [$fileKey]);
+
+        Storage::disk('public')->assertMissing('users/logos/existing.png');
+    }
 }

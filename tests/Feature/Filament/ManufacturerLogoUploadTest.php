@@ -4,9 +4,12 @@ namespace Tests\Feature\Filament;
 
 use App\Enums\Role;
 use App\Filament\Resources\Manufacturers\Pages\CreateManufacturer;
+use App\Filament\Resources\Manufacturers\Pages\EditManufacturer;
+use App\Models\Manufacturer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -72,5 +75,39 @@ class ManufacturerLogoUploadTest extends TestCase
             ])
             ->call('create')
             ->assertHasFormErrors(['logo']);
+    }
+
+    /**
+     * Sem deleteUploadedFileUsing(), remover/substituir um arquivo já salvo só tira ele
+     * do estado do form — o arquivo físico ficava órfão no disco (ver ManufacturerForm).
+     */
+    public function test_deleting_the_existing_logo_removes_it_from_disk(): void
+    {
+        Storage::fake('public');
+        $manufacturer = Manufacturer::factory()->create(['logo' => 'manufacturers/logos/old.png']);
+        Storage::disk('public')->put($manufacturer->logo, 'conteudo');
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $component = Livewire::test(EditManufacturer::class, ['record' => $manufacturer->getKey()]);
+        $fileKey = array_key_first($component->get('data.logo'));
+
+        $component->call('callSchemaComponentMethod', 'form.logo', 'deleteUploadedFile', [$fileKey]);
+
+        Storage::disk('public')->assertMissing('manufacturers/logos/old.png');
+    }
+
+    public function test_deleting_the_existing_icon_removes_it_from_disk(): void
+    {
+        Storage::fake('public');
+        $manufacturer = Manufacturer::factory()->create(['icon' => 'manufacturers/icons/old.png']);
+        Storage::disk('public')->put($manufacturer->icon, 'conteudo');
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $component = Livewire::test(EditManufacturer::class, ['record' => $manufacturer->getKey()]);
+        $fileKey = array_key_first($component->get('data.icon'));
+
+        $component->call('callSchemaComponentMethod', 'form.icon', 'deleteUploadedFile', [$fileKey]);
+
+        Storage::disk('public')->assertMissing('manufacturers/icons/old.png');
     }
 }
