@@ -25,7 +25,7 @@ class ImportCatalogParts implements ShouldQueue
     {
         $disk = Storage::disk('local');
 
-        if (! $disk->exists($this->catalog->file)) {
+        if (blank($this->catalog->file) || ! $disk->exists($this->catalog->file)) {
             return;
         }
 

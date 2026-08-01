@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Api\CatalogImportController\Exceptions\CatalogNotImportedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ImportCatalogRequest;
+use App\Jobs\ImportCatalogParts;
 use App\Jobs\ImportCatalogPartsUpdate;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
@@ -17,15 +17,21 @@ class CatalogImportController extends Controller
     {
         $catalog = Catalog::query()->where('slug', $request->string('slug'))->firstOrFail();
 
-        if ($catalog->import_status !== ImportStatus::Imported) {
-            throw CatalogNotImportedException::make();
-        }
-
         $catalog->forceFill(['import_status' => ImportStatus::Importing])->save();
 
-        $path = $request->file('file')->store('catalogs/updates', 'local');
+        // Um catálogo sem arquivo original ainda não passou pelo import inicial — o
+        // arquivo enviado aqui vira esse arquivo original (ImportCatalogParts, que
+        // sobrescreve/ativa o catálogo), não uma atualização aditiva.
+        if (blank($catalog->file)) {
+            $path = $request->file('file')->store('catalogs', 'local');
+            $catalog->forceFill(['file' => $path])->save();
 
-        ImportCatalogPartsUpdate::dispatch($catalog, $path);
+            ImportCatalogParts::dispatch($catalog);
+        } else {
+            $path = $request->file('file')->store('catalogs/updates', 'local');
+
+            ImportCatalogPartsUpdate::dispatch($catalog, $path);
+        }
 
         if ($request->hasFile('informativos')) {
             $files = [];
