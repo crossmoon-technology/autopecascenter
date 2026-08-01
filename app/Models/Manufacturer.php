@@ -34,6 +34,13 @@ class Manufacturer extends Model
             // Arquivo só é removido do disco na exclusão permanente — o soft delete
             // precisa manter o arquivo, já que o fabricante pode ser restaurado depois.
             if ($manufacturer->isForceDeleting()) {
+                // catalogs.manufacturer_id -> manufacturers é ON DELETE CASCADE no banco,
+                // mas isso apaga as linhas direto no Postgres sem disparar o
+                // Catalog::booted() — sem esse forceDelete() explícito aqui, o
+                // file/update_file de cada catálogo ficaria órfão no storage.
+                // withTrashed() porque a cascade do banco não filtra por deleted_at.
+                $manufacturer->catalogs()->withTrashed()->get()->each->forceDelete();
+
                 Storage::disk('public')->delete(array_filter([$manufacturer->logo, $manufacturer->icon]));
             }
         });
