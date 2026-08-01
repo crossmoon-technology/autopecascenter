@@ -6,7 +6,6 @@ use App\Jobs\ImportCatalogParts;
 use App\Jobs\ImportCatalogPartsUpdate;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
-use App\Models\Informativo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -171,43 +170,5 @@ class CatalogImportTest extends TestCase
         ]);
 
         $this->assertSame(ImportStatus::Importing, $catalog->refresh()->import_status);
-    }
-
-    public function test_creates_informativos_sent_alongside_the_file(): void
-    {
-        Storage::fake('public');
-        Storage::fake('local');
-        Queue::fake();
-        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::Imported]);
-
-        $response = $this->withHeader('X-Api-Key', self::API_KEY)->postJson('/api/catalogs/import', [
-            'slug' => $catalog->slug,
-            'file' => $this->jsonlUpload(),
-            'informativos' => [
-                UploadedFile::fake()->create('boletim.pdf', 100, 'application/pdf'),
-                UploadedFile::fake()->image('capa.png'),
-            ],
-        ]);
-
-        $response->assertAccepted();
-        $this->assertSame(2, Informativo::query()->where('catalog_id', $catalog->id)->count());
-
-        $pdf = Informativo::query()->where('catalog_id', $catalog->id)->where('original_name', 'boletim.pdf')->firstOrFail();
-        Storage::disk('public')->assertExists($pdf->file);
-    }
-
-    public function test_works_without_any_informativos(): void
-    {
-        Storage::fake('local');
-        Queue::fake();
-        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::Imported]);
-
-        $response = $this->withHeader('X-Api-Key', self::API_KEY)->postJson('/api/catalogs/import', [
-            'slug' => $catalog->slug,
-            'file' => $this->jsonlUpload(),
-        ]);
-
-        $response->assertAccepted();
-        $this->assertSame(0, Informativo::query()->where('catalog_id', $catalog->id)->count());
     }
 }

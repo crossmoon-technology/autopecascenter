@@ -25,7 +25,6 @@ use App\Filament\Pages\Configuracoes\ManufacturerPreferences;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Perfil\ViewProfile;
 use App\Filament\Resources\Catalogs\CatalogResource;
-use App\Filament\Resources\Informativos\InformativoResource;
 use App\Filament\Resources\Manufacturers\ManufacturerResource;
 use App\Filament\Resources\Parts\PartResource;
 use App\Filament\Widgets\OrdersOverview;
@@ -82,7 +81,6 @@ class AdminPanelProvider extends PanelProvider
                 ManufacturerResource::class,
                 CatalogResource::class,
                 PartResource::class,
-                InformativoResource::class,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')

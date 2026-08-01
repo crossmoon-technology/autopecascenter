@@ -2,18 +2,20 @@
 
 namespace Tests\Feature\Filament;
 
+use App\Enums\Role;
 use App\Filament\Pages\Buscas\Iframes;
 use App\Filament\Pages\Buscas\Orders;
 use App\Filament\Pages\Configuracoes\ManufacturerPreferences;
 use App\Filament\Pages\Dashboard;
-use App\Filament\Resources\Informativos\Pages\ListInformativos;
+use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Cobre os 4 formatos estruturais diferentes usados pelas páginas do vendedor (ver
+ * Cobre os 4 formatos estruturais diferentes usados pelas páginas do painel (ver
  * App\Filament\Concerns\HasHelpAction): subclasse do Dashboard padrão do Filament, página
  * simples, página com tabela (que já tem seus próprios headerActions na tabela, separados
  * dos da página) e página de listagem de Resource (que precisa mesclar com os
@@ -59,12 +61,13 @@ class PageHelpActionTest extends TestCase
         $this->assertSame('Como funciona "Fabricantes habilitados"', $component->instance()->getMountedAction()->getModalHeading());
     }
 
-    public function test_informativos_list_shows_the_help_modal_alongside_the_default_actions(): void
+    public function test_users_list_shows_the_help_modal_alongside_the_default_actions(): void
     {
-        $this->actingAs(User::factory()->approvedSeller()->create());
+        Filament::setCurrentPanel('super-admin');
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
-        $component = Livewire::test(ListInformativos::class)->mountAction('help')->assertActionMounted('help');
+        $component = Livewire::test(ListUsers::class)->mountAction('help')->assertActionMounted('help');
 
-        $this->assertSame('Como funciona a página de Informativos', $component->instance()->getMountedAction()->getModalHeading());
+        $this->assertSame('Como funciona a página de Usuários', $component->instance()->getMountedAction()->getModalHeading());
     }
 }

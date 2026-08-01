@@ -36,11 +36,6 @@ class Catalog extends Model
         return $this->hasMany(Part::class);
     }
 
-    public function informativos(): HasMany
-    {
-        return $this->hasMany(Informativo::class);
-    }
-
     protected static function booted(): void
     {
         // O force delete já é coberto pelo cascadeOnDelete() da FK no banco; aqui só

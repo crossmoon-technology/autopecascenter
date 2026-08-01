@@ -24,7 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         FilamentAsset::register([
-            Js::make('informativo-preview', Vite::asset('resources/js/informativo-preview.js'))->module(),
             Js::make('onboarding-tour', Vite::asset('resources/js/onboarding-tour.js'))->module(),
             Css::make('onboarding-tour', Vite::asset('resources/css/onboarding-tour.css')),
         ]);
