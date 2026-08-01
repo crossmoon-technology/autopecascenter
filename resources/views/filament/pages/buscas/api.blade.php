@@ -120,6 +120,12 @@
         .ps-tab:hover {
             opacity: 0.85;
         }
+        .ps-tab-has-results {
+            opacity: 0.85;
+            border-color: rgb(34 197 94);
+            background: rgba(34, 197, 94, 0.12);
+            color: rgb(21 128 61);
+        }
         .ps-tab-active {
             opacity: 1;
             font-weight: 600;
@@ -398,13 +404,17 @@
                             $logo = $manufacturer->icon ?? $manufacturer->logo;
                         @endphp
 
+                        @php
+                            $foundResults = $status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Success && $items->isNotEmpty();
+                        @endphp
+
                         <button
                             type="button"
                             role="tab"
                             x-on:click="activeTab = {{ $manufacturer->id }}"
                             x-bind:aria-selected="(activeTab === {{ $manufacturer->id }}).toString()"
                             x-bind:class="activeTab === {{ $manufacturer->id }} ? 'ps-tab-active' : ''"
-                            class="ps-tab"
+                            class="ps-tab @if ($foundResults) ps-tab-has-results @endif"
                             wire:key="ps-tab-{{ $manufacturer->id }}"
                         >
                             @if ($logo)
@@ -425,10 +435,15 @@
                                     icon="heroicon-o-arrow-path"
                                     style="width: 1rem; height: 1rem; flex-shrink: 0; color: #F94603; animation: spin 2.5s linear infinite;"
                                 />
-                            @elseif ($status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Success)
+                            @elseif ($foundResults)
                                 <x-filament::icon
                                     icon="heroicon-o-check-circle"
                                     style="width: 1rem; height: 1rem; flex-shrink: 0; color: #22c55e;"
+                                />
+                            @elseif ($status === \App\Filament\Pages\Buscas\Api\Enums\SearchStatus::Success)
+                                <x-filament::icon
+                                    icon="heroicon-o-minus-circle"
+                                    style="width: 1rem; height: 1rem; flex-shrink: 0; color: #9ca3af;"
                                 />
                             @else
                                 <x-filament::icon
