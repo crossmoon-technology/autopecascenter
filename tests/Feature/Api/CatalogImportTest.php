@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Api;
 
-use App\Http\Controllers\Api\CatalogImportController\Exceptions\CatalogNotImportedException;
+use App\Jobs\ImportCatalogParts;
 use App\Jobs\ImportCatalogPartsUpdate;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
@@ -71,20 +71,62 @@ class CatalogImportTest extends TestCase
         $response->assertUnprocessable()->assertJsonValidationErrors(['slug']);
     }
 
-    public function test_rejects_a_catalog_that_has_not_been_imported_yet(): void
+    public function test_accepts_a_catalog_that_has_not_been_imported_yet(): void
     {
-        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::NotImported]);
+        Storage::fake('local');
+        Queue::fake();
+        $catalog = Catalog::factory()->create(['file' => null, 'import_status' => ImportStatus::NotImported]);
 
         $response = $this->withHeader('X-Api-Key', self::API_KEY)->postJson('/api/catalogs/import', [
             'slug' => $catalog->slug,
             'file' => $this->jsonlUpload(),
         ]);
 
-        $response->assertUnprocessable()->assertJsonValidationErrors(['slug']);
-        $this->assertSame(
-            CatalogNotImportedException::MESSAGE,
-            $response->json('errors.slug.0')
-        );
+        $response->assertAccepted();
+
+        $this->assertSame(ImportStatus::Importing, $catalog->refresh()->import_status);
+    }
+
+    public function test_treats_the_file_as_the_original_import_for_a_catalog_without_one(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+        $catalog = Catalog::factory()->create(['file' => null, 'import_status' => ImportStatus::NotImported]);
+
+        $response = $this->withHeader('X-Api-Key', self::API_KEY)->postJson('/api/catalogs/import', [
+            'slug' => $catalog->slug,
+            'file' => $this->jsonlUpload(),
+        ]);
+
+        $response->assertAccepted();
+
+        Queue::assertPushed(ImportCatalogParts::class, fn (ImportCatalogParts $job): bool => $job->catalog->is($catalog));
+        Queue::assertNotPushed(ImportCatalogPartsUpdate::class);
+
+        $catalog->refresh();
+        $this->assertNotNull($catalog->file);
+        $this->assertNull($catalog->update_file);
+        Storage::disk('local')->assertExists($catalog->file);
+    }
+
+    public function test_treats_the_file_as_an_update_for_a_catalog_that_already_has_one(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::Imported]);
+        $originalFile = $catalog->file;
+
+        $response = $this->withHeader('X-Api-Key', self::API_KEY)->postJson('/api/catalogs/import', [
+            'slug' => $catalog->slug,
+            'file' => $this->jsonlUpload(),
+        ]);
+
+        $response->assertAccepted();
+
+        Queue::assertPushed(ImportCatalogPartsUpdate::class, fn (ImportCatalogPartsUpdate $job): bool => $job->catalog->is($catalog));
+        Queue::assertNotPushed(ImportCatalogParts::class);
+
+        $this->assertSame($originalFile, $catalog->refresh()->file);
     }
 
     public function test_rejects_a_non_jsonl_file(): void
