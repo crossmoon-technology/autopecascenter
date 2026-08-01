@@ -62,7 +62,7 @@ class PartsRelationManager extends RelationManager
                 TextColumn::make('atributos')
                     ->label('Atributos')
                     ->state(fn (Part $record): ?string => collect($record->atributos ?? [])
-                        ->map(fn ($value, $key) => "{$key}: {$value}")
+                        ->map(fn ($value, $key) => "{$key}: ".self::formatAttributeValue($value))
                         ->implode(', ') ?: null)
                     ->limit(60),
                 TextColumn::make('created_at')
@@ -80,5 +80,20 @@ class PartsRelationManager extends RelationManager
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Atributos vem de jsonl arbitrário por fabricante, então um valor pode ser uma
+     * string, um array simples, ou (raramente) um array aninhado — formata
+     * recursivamente em vez de assumir uma estrutura fixa (interpolar array direto numa
+     * string dá "Array to string conversion").
+     */
+    private static function formatAttributeValue(mixed $value): string
+    {
+        if (is_array($value)) {
+            return collect($value)->map(fn ($item) => self::formatAttributeValue($item))->implode(', ');
+        }
+
+        return (string) $value;
     }
 }
