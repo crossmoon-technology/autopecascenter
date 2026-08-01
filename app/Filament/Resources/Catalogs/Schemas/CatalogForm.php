@@ -45,12 +45,11 @@ class CatalogForm
                     ->columnSpanFull(),
                 FileUpload::make('file')
                     ->label('Arquivo original')
-                    ->required()
                     ->rules(['extensions:jsonl', new ValidJsonl])
                     ->directory('catalogs')
                     ->disabled(fn (?Catalog $record): bool => $record !== null && $record->import_status !== ImportStatus::NotImported)
                     ->helperText(fn (?Catalog $record): ?string => match (true) {
-                        $record === null => null,
+                        $record === null => 'Opcional — sem arquivo, as peças podem ser enviadas depois pela API de importação de catálogo.',
                         $record->import_status === ImportStatus::Imported => 'Não é possível anexar um novo arquivo enquanto as peças importadas existirem. Exclua as peças deste catálogo (na listagem de catálogos) para liberar este campo.',
                         $record->import_status === ImportStatus::Importing => 'Não é possível anexar um novo arquivo enquanto a importação estiver em andamento.',
                         default => null,

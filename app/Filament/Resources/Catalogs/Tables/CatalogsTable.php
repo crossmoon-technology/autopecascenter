@@ -100,7 +100,7 @@ class CatalogsTable
                     ->label('Importar')
                     ->icon(Heroicon::OutlinedArrowUpTray)
                     ->requiresConfirmation()
-                    ->visible(fn (Catalog $record): bool => $record->import_status === ImportStatus::NotImported)
+                    ->visible(fn (Catalog $record): bool => $record->import_status === ImportStatus::NotImported && filled($record->file))
                     ->action(function (Catalog $record) {
                         $record->forceFill(['import_status' => ImportStatus::Importing])->save();
 
