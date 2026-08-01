@@ -12,6 +12,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use UnitEnum;
 
 class GeneralSettings extends Page implements HasForms
@@ -69,7 +70,8 @@ class GeneralSettings extends Page implements HasForms
                     ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                     ->maxSize(2048)
                     ->directory('users/logos')
-                    ->helperText('Aparece ao lado da logo da Auto Peças Center nas cotações exportadas em PDF.'),
+                    ->helperText('Aparece ao lado da logo da Auto Peças Center nas cotações exportadas em PDF.')
+                    ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file)),
             ])
             ->statePath('data');
     }
