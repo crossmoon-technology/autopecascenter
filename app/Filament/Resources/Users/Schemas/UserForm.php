@@ -51,14 +51,16 @@ class UserForm
                     ->label('Senha')
                     ->password()
                     ->revealable()
-                    ->required()
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn (?string $state): bool => filled($state))
                     ->confirmed()
-                    ->rule(Password::min(8)->numbers()->symbols()->mixedCase()),
+                    ->rule(Password::min(8)->numbers()->symbols()->mixedCase())
+                    ->helperText(fn (string $operation): ?string => $operation === 'edit' ? 'Deixe em branco para manter a senha atual.' : null),
                 TextInput::make('password_confirmation')
                     ->label('Confirmar senha')
                     ->password()
                     ->revealable()
-                    ->required()
+                    ->required(fn (string $operation): bool => $operation === 'create')
                     ->dehydrated(false),
                 Section::make('Dados do vendedor')
                     ->visible(fn (Get $get): bool => $get('role') === Role::Seller->value)

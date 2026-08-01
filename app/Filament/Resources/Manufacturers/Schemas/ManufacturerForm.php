@@ -7,6 +7,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ManufacturerForm
@@ -31,13 +32,15 @@ class ManufacturerForm
                     ->disk('public')
                     ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                     ->maxSize(2048)
-                    ->directory('manufacturers/logos'),
+                    ->directory('manufacturers/logos')
+                    ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file)),
                 FileUpload::make('icon')
                     ->image()
                     ->disk('public')
                     ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                     ->maxSize(2048)
-                    ->directory('manufacturers/icons'),
+                    ->directory('manufacturers/icons')
+                    ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file)),
                 TextInput::make('external_link')
                     ->url()
                     ->nullable(),
