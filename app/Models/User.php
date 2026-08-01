@@ -348,6 +348,11 @@ class User extends Authenticatable implements FilamentUser
             ! $this->hasVerifiedEmail() => 'E-mail não confirmado',
             $this->plan === null => 'Aguardando escolha de plano',
             $this->isTrialExpired() && $this->plan_approved_at === null => 'Avaliação expirada',
+            // trial_ends_at nulo aqui não é "vencido" (isTrialExpired() já cobre isso
+            // acima) — é um plano atribuído sem uma avaliação com prazo definido, ex: uma
+            // conta criada/editada direto pelo SuperAdmin (ver UserForm) sem preencher
+            // essa data.
+            $this->plan_approved_at === null && $this->trial_ends_at === null => 'Em avaliação',
             $this->plan_approved_at === null => 'Em avaliação até '.$this->trial_ends_at->format('d/m/Y'),
             $this->isSubscriptionExpired() => 'Assinatura vencida',
             $this->subscription_ends_at === null => 'Ativo',
