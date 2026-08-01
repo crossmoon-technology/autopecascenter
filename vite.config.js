@@ -9,7 +9,6 @@ export default defineConfig({
             input: [
                 'resources/scss/app.scss',
                 'resources/js/app.js',
-                'resources/js/informativo-preview.js',
                 'resources/js/onboarding-tour.js',
                 'resources/css/onboarding-tour.css',
                 'resources/css/filament/admin/theme.css',

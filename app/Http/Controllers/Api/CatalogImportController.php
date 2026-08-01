@@ -8,7 +8,6 @@ use App\Jobs\ImportCatalogParts;
 use App\Jobs\ImportCatalogPartsUpdate;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
-use App\Services\Informativo\BulkCreateInformativos;
 use Illuminate\Http\JsonResponse;
 
 class CatalogImportController extends Controller
@@ -31,19 +30,6 @@ class CatalogImportController extends Controller
             $path = $request->file('file')->store('catalogs/updates', 'local');
 
             ImportCatalogPartsUpdate::dispatch($catalog, $path);
-        }
-
-        if ($request->hasFile('informativos')) {
-            $files = [];
-            $original_names = [];
-
-            foreach ($request->file('informativos') as $upload) {
-                $stored = $upload->store('catalogs/informativos', 'public');
-                $files[] = $stored;
-                $original_names[$stored] = $upload->getClientOriginalName();
-            }
-
-            app(BulkCreateInformativos::class)->handle($catalog, $files, $original_names);
         }
 
         return response()->json([
