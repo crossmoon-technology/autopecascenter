@@ -109,6 +109,20 @@ class UserSellerAccessTest extends TestCase
         $this->assertSame('success', $user->sellerStatusColor());
     }
 
+    /**
+     * Reproduz o 500 relatado na página de Vendedores: um Seller com plano atribuído
+     * direto pelo SuperAdmin (ver App\Filament\Resources\Users\Schemas\UserForm), sem
+     * preencher avaliação nem aprovar pagamento — sellerStatusLabel() chamava
+     * ->format() em trial_ends_at assumindo que nunca seria nulo nesse ponto.
+     */
+    public function test_a_seller_with_a_plan_but_no_trial_end_date_does_not_crash(): void
+    {
+        $user = User::factory()->seller()->create(['plan' => Plan::Profissional]);
+
+        $this->assertSame('Em avaliação', $user->sellerStatusLabel());
+        $this->assertSame('info', $user->sellerStatusColor());
+    }
+
     public function test_non_seller_roles_never_report_payment_pending_or_trial_expired(): void
     {
         $superAdmin = User::factory()->create(['role' => Role::SuperAdmin]);
