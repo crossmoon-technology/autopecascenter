@@ -1000,6 +1000,33 @@ class CatalogDatabaseSearchPageTest extends TestCase
             ->assertSeeHtml('<mark class="pe-highlight">GP33314</mark>');
     }
 
+    public function test_manufacturer_tab_is_highlighted_when_it_has_results(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['name' => 'Cofap', 'is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->assertSeeHtml('class="pe-tab  pe-tab-has-results "');
+    }
+
+    public function test_manufacturer_tab_is_not_highlighted_when_it_has_no_results(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['name' => 'Cofap', 'is_active' => true]);
+        Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => 'nao-existe'])
+            ->call('search')
+            ->assertDontSeeHtml('class="pe-tab  pe-tab-has-results "');
+    }
+
     public function test_no_highlight_before_any_search_has_run(): void
     {
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);

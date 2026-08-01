@@ -289,6 +289,65 @@ class ApiSearchPageTest extends TestCase
         $this->assertDatabaseCount('quotation_items', 0);
     }
 
+    public function test_manufacturer_tab_is_highlighted_when_results_are_found(): void
+    {
+        $cofap = Manufacturer::factory()->create(['name' => 'Cofap', 'slug' => 'cofap', 'is_active' => true]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Http::fake([
+            'mmcofap.com.br/*' => Http::response(<<<'HTML'
+                <section class="resultados-busca">
+                    <div class="specs specs-busca linha-1">
+                        <div class="imagem"><img class="trigger-lightbox" src="https://mmcofap.com.br/img/16002.jpg"></div>
+                        <div class = 'item-title'>
+                            <a href="https://mmcofap.com.br/busca-catalogo/?busca=16002" target="_blank">AMORTECEDOR 16002</a><i>VOLKSWAGEN - </i>GOL</a>
+                        </div>
+                    </div>
+                </section>
+                HTML, 200),
+        ]);
+
+        Livewire::test(Api::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->call('searchManufacturer', $cofap->id)
+            ->assertSeeHtml('class="ps-tab  ps-tab-has-results "');
+    }
+
+    public function test_manufacturer_tab_is_not_highlighted_when_the_search_succeeds_with_no_results(): void
+    {
+        $hipperFreios = Manufacturer::factory()->create(['name' => 'Hipper Freios', 'slug' => 'hipper-freios', 'is_active' => true]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Http::fake([
+            'hipperfreios.com.br/*' => Http::response('<table class="tabela-busca"></table>', 200),
+        ]);
+
+        Livewire::test(Api::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->call('searchManufacturer', $hipperFreios->id)
+            ->assertSet("results.{$hipperFreios->id}.status", SearchStatus::Success)
+            ->assertDontSeeHtml('class="ps-tab  ps-tab-has-results "');
+    }
+
+    public function test_manufacturer_tab_is_not_highlighted_when_the_search_fails(): void
+    {
+        $cofap = Manufacturer::factory()->create(['name' => 'Cofap', 'slug' => 'cofap', 'is_active' => true]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Http::fake([
+            'mmcofap.com.br/*' => Http::response('', 500),
+        ]);
+
+        Livewire::test(Api::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->call('searchManufacturer', $cofap->id)
+            ->assertSet("results.{$cofap->id}.status", SearchStatus::Failed)
+            ->assertDontSeeHtml('class="ps-tab  ps-tab-has-results "');
+    }
+
     public function test_search_results_show_a_share_link_for_each_item(): void
     {
         $cofap = Manufacturer::factory()->create(['name' => 'Cofap', 'slug' => 'cofap', 'is_active' => true]);
