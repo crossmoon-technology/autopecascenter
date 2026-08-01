@@ -1,2 +1,4 @@
 User-agent: *
 Disallow:
+
+Sitemap: https://autopecascenter.com.br/sitemap.xml
