@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Models;
 
+use App\Models\Catalog;
 use App\Models\Manufacturer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -51,5 +52,39 @@ class ManufacturerFileCleanupTest extends TestCase
         $manufacturer->forceDelete();
 
         $this->assertModelMissing($manufacturer);
+    }
+
+    /**
+     * catalogs.manufacturer_id -> manufacturers é ON DELETE CASCADE no banco — sem o
+     * forceDelete() explícito por Eloquent em Manufacturer::booted(), essa cascade
+     * apagaria a linha do catálogo direto no Postgres sem passar pelo Catalog::booted(),
+     * deixando o file dele órfão no disco local.
+     */
+    public function test_force_deleting_also_cleans_up_its_catalogs_files(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        $manufacturer = Manufacturer::factory()->create(['logo' => null, 'icon' => null]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->id, 'file' => 'catalogs/original.jsonl']);
+        Storage::disk('local')->put($catalog->file, 'conteudo');
+
+        $manufacturer->forceDelete();
+
+        Storage::disk('local')->assertMissing('catalogs/original.jsonl');
+        $this->assertModelMissing($catalog);
+    }
+
+    public function test_force_deleting_also_cleans_up_an_already_trashed_catalogs_files(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        $manufacturer = Manufacturer::factory()->create(['logo' => null, 'icon' => null]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->id, 'file' => 'catalogs/trashed.jsonl']);
+        Storage::disk('local')->put($catalog->file, 'conteudo');
+        $catalog->delete();
+
+        $manufacturer->forceDelete();
+
+        Storage::disk('local')->assertMissing('catalogs/trashed.jsonl');
     }
 }
