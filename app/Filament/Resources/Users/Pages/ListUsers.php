@@ -29,6 +29,6 @@ class ListUsers extends ListRecords
     protected function helpDescription(): string
     {
         return '<p>Lista todas as contas da plataforma — super admins, vendedores e clientes — num só lugar.</p>'.
-            '<p>Use "Novo" para criar uma conta manualmente, escolhendo o papel (e o plano, se for vendedor). Para aprovar pagamento ou editar dados de um vendedor já existente, use a página de Vendedores.</p>';
+            '<p>Use "Novo" para criar uma conta manualmente, escolhendo o papel (e o plano, se for vendedor), ou clique numa conta existente pra editar seus dados. Para aprovar pagamento de um vendedor, use a página de Vendedores.</p>';
     }
 }
