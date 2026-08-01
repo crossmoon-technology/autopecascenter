@@ -289,6 +289,12 @@
         .pe-tab:hover {
             opacity: 0.85;
         }
+        .pe-tab-has-results {
+            opacity: 0.85;
+            border-color: rgb(34 197 94);
+            background: rgba(34, 197, 94, 0.12);
+            color: rgb(21 128 61);
+        }
         .pe-tab-active {
             opacity: 1;
             font-weight: 600;
@@ -450,7 +456,7 @@
                             x-on:click="activeTab = {{ $manufacturer->id }}"
                             x-bind:aria-selected="(activeTab === {{ $manufacturer->id }}).toString()"
                             x-bind:class="activeTab === {{ $manufacturer->id }} ? 'pe-tab-active' : ''"
-                            class="pe-tab"
+                            class="pe-tab @if ($parts->isNotEmpty()) pe-tab-has-results @endif"
                         >
                             @if ($manufacturerImage)
                                 <span class="pe-result-heading-icon">
