@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Concerns\HasHelpAction;
 use App\Filament\Resources\Users\UserResource;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListUsers extends ListRecords
@@ -14,7 +15,10 @@ class ListUsers extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [$this->helpAction()];
+        return [
+            CreateAction::make(),
+            $this->helpAction(),
+        ];
     }
 
     protected function helpTitle(): string
