@@ -65,6 +65,14 @@ class UserResourceTest extends TestCase
             ->assertCanNotSeeTableRecords([$seller]);
     }
 
+    public function test_the_create_action_is_visible_on_the_list_page(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(ListUsers::class)
+            ->assertActionExists('create');
+    }
+
     public function test_soft_deleted_users_are_hidden_by_default(): void
     {
         $active = User::factory()->create(['role' => Role::Client]);
