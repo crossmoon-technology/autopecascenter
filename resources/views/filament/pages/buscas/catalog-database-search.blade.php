@@ -507,17 +507,16 @@
         @endif
 
         @php
-            $exactManufacturers = $this->activeManufacturers()->filter(
-                fn ($manufacturer) => ($exactResults[$manufacturer->id] ?? collect())->isNotEmpty()
-            );
+            $exactManufacturers = $this->exactResultManufacturers();
         @endphp
 
         <div class="pe-tabs-wrap">
             <x-filament::section>
                 <x-slot name="heading">Peças exatas</x-slot>
                 <x-slot name="description">
-                    Busca o código próprio em TODOS os fabricantes ativos, ignorando os fabricantes marcados acima —
-                    inclui também as peças de conversão de cada resultado encontrado.
+                    Busca o código próprio nos fabricantes ativos NÃO marcados acima — quem já está marcado tem seu
+                    resultado em "Resultados", então não se repete aqui. Inclui também as peças de conversão de cada
+                    resultado encontrado.
                 </x-slot>
 
                 @if ($exactManufacturers->isEmpty())

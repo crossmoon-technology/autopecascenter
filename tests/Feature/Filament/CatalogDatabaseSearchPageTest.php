@@ -763,6 +763,9 @@ class CatalogDatabaseSearchPageTest extends TestCase
 
     public function test_pecas_exatas_finds_a_part_by_its_own_codigo(): void
     {
+        // Desmarcado de propósito: um fabricante marcado já tem seu resultado coberto em
+        // "Resultados" e agora fica de fora de "Peças exatas" (ver
+        // test_pecas_exatas_excludes_a_manufacturer_that_is_checked).
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
         $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
         $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
@@ -771,6 +774,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
             ->fillForm(['codigo' => '16002'])
             ->call('search')
             ->assertSet("exactResults.{$manufacturer->id}.0.id", $part->id)
@@ -789,6 +793,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
             ->fillForm(['codigo' => 'mg 19038'])
             ->call('search')
             ->assertSet("exactResults.{$manufacturer->id}.0.id", $part->id);
@@ -808,7 +813,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
             ->assertSee('MG19038');
     }
 
-    public function test_pecas_exatas_ignores_the_manufacturer_checkbox(): void
+    public function test_pecas_exatas_includes_a_manufacturer_that_is_unchecked(): void
     {
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
         $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
@@ -825,6 +830,56 @@ class CatalogDatabaseSearchPageTest extends TestCase
             ->assertSet('results', []);
     }
 
+    /**
+     * Reproduz o bug relatado: um vendedor que só habilitou "Cofap" em Configurações não
+     * via a peça exata de um código de "Hiper Freios" nem em "Peças exatas" — porque
+     * allActivePartsQuery() usava activeManufacturers() (já filtrado pela preferência do
+     * vendedor), então Hiper Freios nunca entrava no universo pesquisado ali.
+     */
+    public function test_pecas_exatas_finds_a_part_from_a_manufacturer_the_seller_has_not_enabled(): void
+    {
+        $enabled = Manufacturer::factory()->create(['name' => 'Cofap', 'is_active' => true]);
+        Catalog::factory()->create(['manufacturer_id' => $enabled->getKey(), 'is_active' => true]);
+
+        $notEnabled = Manufacturer::factory()->create(['name' => 'Hiper Freios', 'is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $notEnabled->getKey(), 'is_active' => true]);
+        $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'HF01', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Part::query()->whereKey($part->id)->get());
+
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $user->preferredManufacturers()->attach($enabled);
+        $this->actingAs($user);
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            // Hiper Freios nem aparece como chip pra esse vendedor — não tem como desmarcar
+            // o que não existe na tela, e ainda assim a peça exata precisa aparecer.
+            ->assertDontSee('Hiper Freios')
+            ->fillForm(['codigo' => 'HF01'])
+            ->call('search')
+            ->assertSet("exactResults.{$notEnabled->id}.0.id", $part->id)
+            ->assertSee('Hiper Freios');
+    }
+
+    /**
+     * Um fabricante marcado já aparece em "Resultados" — mostrar ele de novo em "Peças
+     * exatas" duplicaria o mesmo dado na tela (ver conversa que motivou esse ajuste).
+     */
+    public function test_pecas_exatas_excludes_a_manufacturer_that_is_checked(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
+        $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
+        Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => '16002', 'conversoes' => []]);
+        app(RebuildPartEquivalences::class)->forParts(Catalog::query()->find($catalog->id)->parts);
+
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->fillForm(['codigo' => '16002'])
+            ->call('search')
+            ->assertSet("results.{$manufacturer->id}.0.codigo", '16002')
+            ->assertSet('exactResults', []);
+    }
+
     public function test_pecas_exatas_does_not_match_a_longer_code(): void
     {
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
@@ -836,6 +891,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
             ->fillForm(['codigo' => 'GH 123'])
             ->call('search')
             ->assertSet("exactResults.{$manufacturer->id}", fn ($parts) => $parts->count() === 1 && $parts->first()->id === $exact->id);
@@ -860,6 +916,8 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$bosch->id}", false)
+            ->set("data.manufacturers.{$nakata->id}", false)
             ->fillForm(['codigo' => 'BOSCH-001'])
             ->call('search')
             ->assertSet("exactResults.{$bosch->id}.0.id", $boschPart->id)
@@ -881,6 +939,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
             ->call('searchFor', 'MG 19038')
             ->assertSet('data.codigo', 'MG 19038')
             ->assertSet("exactResults.{$manufacturer->id}.0.id", $nakataPart->id);
@@ -896,6 +955,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
             ->fillForm(['codigo' => '16002'])
             ->call('search')
             ->assertSet('usedFallbackScan', true)
@@ -987,6 +1047,8 @@ class CatalogDatabaseSearchPageTest extends TestCase
 
     public function test_highlight_appears_in_pecas_exatas_too(): void
     {
+        // Desmarcado de propósito, senão o destaque viria de "Resultados" e o teste não
+        // provaria nada sobre "Peças exatas" especificamente.
         $manufacturer = Manufacturer::factory()->create(['is_active' => true]);
         $catalog = Catalog::factory()->create(['manufacturer_id' => $manufacturer->getKey(), 'is_active' => true]);
         $part = Part::factory()->create(['catalog_id' => $catalog->getKey(), 'codigo' => 'GP33314', 'conversoes' => []]);
@@ -995,6 +1057,7 @@ class CatalogDatabaseSearchPageTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
         Livewire::test(CatalogDatabaseSearch::class)
+            ->set("data.manufacturers.{$manufacturer->id}", false)
             ->fillForm(['codigo' => 'GP33314'])
             ->call('search')
             ->assertSeeHtml('<mark class="pe-highlight">GP33314</mark>');

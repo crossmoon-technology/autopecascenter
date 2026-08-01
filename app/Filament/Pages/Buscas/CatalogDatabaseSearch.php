@@ -86,9 +86,10 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
     /**
      * Resultado da seção "Peças exatas" (código próprio + cadeia de conversão via
      * App\Services\PartEquivalence\RebuildPartEquivalences), agrupado por fabricante —
-     * diferente de $results, essa seção varre TODOS os fabricantes ativos sempre,
-     * ignorando o checkbox de fabricantes selecionados (ver activeManufacturers()).
-     * A ideia é achar peças mesmo de fabricantes que o vendedor nem pensaria em marcar.
+     * diferente de $results, essa seção varre todos os fabricantes ativos NÃO marcados
+     * no checkbox (ver allActivePartsQuery()). A ideia é achar peças de fabricantes que
+     * o vendedor nem pensaria em marcar, sem repetir aqui o que já apareceu em
+     * "Resultados" pros fabricantes marcados.
      *
      * @var array<int, Collection<int, Part>>
      */
@@ -142,7 +143,7 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
     protected function helpDescription(): string
     {
         return '<p>Aqui a busca é feita direto nos catálogos e peças já cadastrados na nossa base — escolha o tipo de busca (código, equivalentes ou atributos), os fabricantes e digite o termo.</p>'.
-            '<p>Os resultados aparecem em duas seções: "Resultados" respeita os fabricantes marcados acima. Já "Peças exatas" busca o código próprio em TODOS os fabricantes ativos, ignorando a marcação — pra achar peças mesmo de um fabricante que o cliente trouxe e você nem pensaria em marcar. Se a peça encontrada tiver códigos de conversão pra outras marcas, essas peças equivalentes também aparecem juntas ali.</p>'.
+            '<p>Os resultados aparecem em duas seções: "Resultados" respeita os fabricantes marcados acima. Já "Peças exatas" busca o código próprio nos fabricantes ativos NÃO marcados acima — pra achar peças mesmo de um fabricante que o cliente trouxe e você nem pensaria em marcar, sem repetir o que já apareceu em "Resultados". Se a peça encontrada tiver códigos de conversão pra outras marcas, essas peças equivalentes também aparecem juntas ali.</p>'.
             '<p>Os resultados aparecem na hora. Dá pra favoritar uma peça (estrela) ou adicionar direto à cotação, sem sair da página.</p>';
     }
 
@@ -173,13 +174,25 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
      */
     public function activeManufacturers(): Collection
     {
-        $eligible = Manufacturer::query()
+        return $this->filterToEnabledManufacturers($this->allActiveManufacturers());
+    }
+
+    /**
+     * Todos os fabricantes ativos com catálogo ativo, no sistema inteiro — sem o filtro
+     * de "Fabricantes habilitados" do vendedor (ver ResolvesPreferredManufacturers).
+     * "Peças exatas" precisa desse universo completo, não só do recorte que o vendedor
+     * habilitou pra si: o objetivo dela é achar peças de um fabricante que ele nem
+     * habilitou (e portanto nem aparece como chip aqui).
+     *
+     * @return Collection<int, Manufacturer>
+     */
+    private function allActiveManufacturers(): Collection
+    {
+        return Manufacturer::query()
             ->where('is_active', true)
             ->whereHas('catalogs', fn ($query) => $query->where('is_active', true))
             ->orderBy('name')
             ->get();
-
-        return $this->filterToEnabledManufacturers($eligible);
     }
 
     /**
@@ -270,8 +283,9 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
             $this->results = $results;
         }
 
-        // "Peças exatas" ignora o checkbox de fabricantes de propósito — o vendedor pode
-        // ter recebido o código de um fabricante que nem pensaria em marcar.
+        // "Peças exatas" só considera fabricantes NÃO marcados no checkbox de propósito
+        // — o vendedor pode ter recebido o código de um fabricante que nem pensaria em
+        // marcar, mas o que já apareceu em "Resultados" não precisa se repetir aqui.
         $this->computeExactResults($codigo);
 
         $foundResults = collect($this->results)->flatten(1)->isNotEmpty()
@@ -323,18 +337,38 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
     }
 
     /**
-     * Todos os fabricantes ativos e habilitados (ver activeManufacturers()) — não
-     * filtrado pelo checkbox marcado na tela, de propósito, só pra essa seção.
+     * Todos os fabricantes ativos do sistema (ver allActiveManufacturers() — não só os
+     * que o vendedor habilitou pra si) que NÃO estão marcados no checkbox agora — de
+     * propósito, só pra essa seção: um fabricante marcado já tem seu resultado coberto
+     * em "Resultados", então repeti-lo aqui seria duplicar dado.
      */
     private function allActivePartsQuery(): Builder
     {
-        $manufacturerIds = $this->activeManufacturers()->pluck('id');
+        $selectedIds = $this->selectedManufacturerIds();
+        $manufacturerIds = $this->allActiveManufacturers()
+            ->reject(fn (Manufacturer $manufacturer): bool => in_array($manufacturer->id, $selectedIds, true))
+            ->pluck('id');
 
         return Part::query()
             ->whereHas('catalog', fn ($query) => $query
                 ->where('is_active', true)
                 ->whereIn('manufacturer_id', $manufacturerIds))
             ->with('catalog.manufacturer');
+    }
+
+    /**
+     * Fabricantes a exibir como aba em "Peças exatas" — resolvidos a partir das chaves
+     * de $exactResults (que pode incluir fabricante fora da lista "habilitada" do
+     * vendedor, ver allActiveManufacturers()), não de activeManufacturers().
+     *
+     * @return Collection<int, Manufacturer>
+     */
+    public function exactResultManufacturers(): Collection
+    {
+        return Manufacturer::query()
+            ->whereIn('id', array_keys($this->exactResults))
+            ->orderBy('name')
+            ->get();
     }
 
     /**

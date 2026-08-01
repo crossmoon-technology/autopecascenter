@@ -47,6 +47,32 @@ class PartsRelationManagerTest extends TestCase
         $this->assertSoftDeleted('parts', ['id' => $part->id]);
     }
 
+    public function test_renders_a_part_with_a_nested_array_atributo_without_error(): void
+    {
+        // "aplicacoes" vindo do jsonl como array de objetos (não string/array simples)
+        // já quebrou essa coluna antes: interpolar um array direto numa string dá
+        // "Array to string conversion" (ver PartsRelationManager::formatAttributeValue()).
+        $catalog = Catalog::factory()->create();
+        Part::factory()->create([
+            'catalog_id' => $catalog->id,
+            'codigo' => 'SP-9',
+            'atributos' => [
+                'aplicacoes' => [
+                    ['montadora' => 'FIAT', 'modelo' => 'UNO'],
+                    ['montadora' => 'VW', 'modelo' => 'GOL'],
+                ],
+            ],
+        ]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(PartsRelationManager::class, [
+            'ownerRecord' => $catalog,
+            'pageClass' => ViewCatalog::class,
+        ])
+            ->assertSuccessful()
+            ->assertSee('FIAT');
+    }
+
     public function test_edit_and_delete_are_disabled_on_the_read_only_view_page(): void
     {
         $catalog = Catalog::factory()->create();
