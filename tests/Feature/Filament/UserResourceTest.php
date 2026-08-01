@@ -73,6 +73,14 @@ class UserResourceTest extends TestCase
             ->assertActionExists('create');
     }
 
+    public function test_the_force_delete_bulk_action_is_available(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(ListUsers::class)
+            ->assertTableBulkActionExists('forceDelete');
+    }
+
     public function test_soft_deleted_users_are_hidden_by_default(): void
     {
         $active = User::factory()->create(['role' => Role::Client]);
