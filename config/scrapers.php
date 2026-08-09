@@ -207,4 +207,52 @@ return [
         'url' => 'https://lionpolimers.com',
         'class' => LionPolimersCatalogScraper::class,
     ],
+    [
+        'name' => 'Biagio Turbos (C123)',
+        'slug' => 'biagio-c123',
+        'url' => 'https://c123.com.br/biagio',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'Freios Farj',
+        'slug' => 'farj',
+        'url' => 'https://c123.com.br/farj',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'Monroe Axios',
+        'slug' => 'monroe-axios',
+        'url' => 'https://c123.com.br/MonroeAxios',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'Monroe Amortecedores',
+        'slug' => 'monroe-amortecedores',
+        'url' => 'https://c123.com.br/MonroeAmortecedores',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'RA Parafusos',
+        'slug' => 'ra-parafusos',
+        'url' => 'https://c123.com.br/sava',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'Fort Peças Amortecedores',
+        'slug' => 'fort-pecas',
+        'url' => 'https://c123.com.br/FortPecas',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'Max Gear',
+        'slug' => 'maxgear',
+        'url' => 'https://c123.com.br/maxgear',
+        'class' => C123CatalogScraper::class,
+    ],
+    [
+        'name' => 'BZ Automotive',
+        'slug' => 'bz-automotive',
+        'url' => 'https://c123.com.br/bz',
+        'class' => C123CatalogScraper::class,
+    ],
 ];
