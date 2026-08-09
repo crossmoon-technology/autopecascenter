@@ -15,6 +15,7 @@ use App\Models\SearchHistory\Enums\Method;
 use App\Models\User;
 use App\Services\PartEquivalence\RebuildPartEquivalences;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -101,6 +102,188 @@ class CatalogDatabaseSearchPageTest extends TestCase
         Livewire::test(CatalogDatabaseSearch::class)
             ->assertDontSee($withoutCatalogs->name)
             ->assertDontSee($withOnlyInactiveCatalog->name);
+    }
+
+    /**
+     * Exceção à regra acima: um fabricante com um provedor de busca ao vivo registrado
+     * (ver PartSearchProviderRegistry) aparece mesmo sem catálogo nenhum — é assim que
+     * MTE-Thomson (sem raspagem em bloco viável) fica selecionável.
+     */
+    public function test_a_manufacturer_with_a_live_search_provider_is_shown_even_without_a_catalog(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->assertSee($manufacturer->name)
+            ->assertSet("data.manufacturers.{$manufacturer->id}", true);
+    }
+
+    /**
+     * search() só devolve os ids pendentes — não faz a busca ao vivo ela mesma (isso é
+     * fetchLiveResultFor(), disparado pelo JS da view DEPOIS que essa resposta já
+     * chegou) — é isso que deixa a aba aparecer com o spinner na hora, sem o
+     * formulário inteiro travar esperando o site do fabricante responder.
+     */
+    public function test_search_immediately_shows_a_pending_tab_with_a_loading_indicator(): void
+    {
+        Http::fake(['cate.mte-thomson.com.br/*' => Http::response('', 200)]);
+
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $ids = Livewire::test(CatalogDatabaseSearch::class)
+            ->set('data.codigo', '206.82')
+            ->call('search')
+            ->assertSet('liveSearchPending', [$manufacturer->id])
+            ->assertSee('Buscando ao vivo')
+            ->assertSee($manufacturer->name)
+            ->get('liveSearchPending');
+
+        $this->assertSame([$manufacturer->id], $ids);
+        Http::assertNothingSent();
+    }
+
+    public function test_search_shows_live_results_for_a_manufacturer_without_a_catalog(): void
+    {
+        Http::fake([
+            'cate.mte-thomson.com.br/*' => Http::response(<<<'HTML'
+                <html><body><table><tbody>
+                <tr class="grid-row">
+                    <td class="grid-cell" data-name="" style="display:none;"></td>
+                    <td class="grid-cell" data-name="" style="display:none;"></td>
+                    <td class="grid-cell" data-name=""><a href="/pt/br/produto/detalhes/206.82/slug"><img src="img.jpg" /></a></td>
+                    <td class="grid-cell" data-name="PARTNUMBER"><a href="/pt/br/produto/detalhes/206.82/slug">206.82</a></td>
+                    <td class="grid-cell" data-name="NOME_LINHA_PRODUTO"><a href="/pt/br/produto/detalhes/206.82/slug">VÁLVULA TERMOSTÁTICA</a></td>
+                    <td class="grid-cell" data-name=""><ul class="list-unstyled"></ul></td>
+                    <td class="grid-cell" data-name=""><label></label></td>
+                    <td class="grid-cell" data-name=""><ul class="list-unstyled"></ul></td>
+                </tr>
+                </tbody></table></body></html>
+                HTML, 200),
+        ]);
+
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        // A busca ao vivo roda como uma chamada separada, disparada pelo JS da view
+        // DEPOIS que search() já retornou (ver o wire:submit no blade) — o teste
+        // encadeia manualmente o que o navegador faria, pra aba aparecer com o
+        // spinner primeiro e só depois os resultados de verdade.
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->set('data.codigo', '206.82')
+            ->call('search')
+            ->assertSee('Buscando ao vivo')
+            ->call('fetchLiveResultFor', $manufacturer->id)
+            ->assertSee('206.82')
+            ->assertSee('VÁLVULA TERMOSTÁTICA');
+    }
+
+    /**
+     * O site do fabricante pagina os resultados dele (ver MteThomsonPartSearchProvider)
+     * — o pager só aparece quando tem mais de uma página, e trocar de página chama
+     * fetchLiveResultFor() de novo com o número da página pedida.
+     */
+    public function test_live_search_pagination_shows_pager_and_navigates_pages(): void
+    {
+        $row = fn (string $codigo) => <<<HTML
+            <tr class="grid-row">
+                <td class="grid-cell" data-name="" style="display:none;"></td>
+                <td class="grid-cell" data-name="" style="display:none;"></td>
+                <td class="grid-cell" data-name=""><a href="/pt/br/produto/detalhes/{$codigo}/slug"><img src="img.jpg" /></a></td>
+                <td class="grid-cell" data-name="PARTNUMBER"><a href="/pt/br/produto/detalhes/{$codigo}/slug">{$codigo}</a></td>
+                <td class="grid-cell" data-name="NOME_LINHA_PRODUTO"><a href="/pt/br/produto/detalhes/{$codigo}/slug">DESC {$codigo}</a></td>
+                <td class="grid-cell" data-name=""><ul class="list-unstyled"></ul></td>
+                <td class="grid-cell" data-name=""><label></label></td>
+                <td class="grid-cell" data-name=""><ul class="list-unstyled"></ul></td>
+            </tr>
+            HTML;
+
+        $footer = <<<'HTML'
+            <div class="grid-footer">
+                <label class="custom-color-cinza">Total de itens:</label> <label class="custom-color-cinza">101</label>
+                <ul class="pagination">
+                    <li class="page-item"><a class="page-link" href="?grid-page=1">1</a></li>
+                    <li class="page-item"><a class="page-link" href="?grid-page=9">9</a></li>
+                </ul>
+            </div>
+            HTML;
+
+        Http::fake([
+            'cate.mte-thomson.com.br/*grid-page=2*' => Http::response('<html><body><table><tbody>'.$row('P2').'</tbody></table>'.$footer.'</body></html>', 200),
+            'cate.mte-thomson.com.br/*' => Http::response('<html><body><table><tbody>'.$row('P1').'</tbody></table>'.$footer.'</body></html>', 200),
+        ]);
+
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->set('data.codigo', '100')
+            ->call('search')
+            ->call('fetchLiveResultFor', $manufacturer->id)
+            ->assertSee('P1')
+            ->assertSee('Página 1 de 9')
+            ->assertSee('Total de itens: 101')
+            ->call('fetchLiveResultFor', $manufacturer->id, 2)
+            ->assertSee('P2')
+            ->assertDontSee('P1')
+            ->assertSee('Página 2 de 9');
+    }
+
+    /**
+     * Uma falha na busca ao vivo (site fora do ar, timeout) não pode aparecer como
+     * "nenhum resultado encontrado" — o vendedor precisa saber que é um erro
+     * temporário, não que a peça não existe.
+     */
+    public function test_live_search_failure_shows_a_notice_instead_of_no_results(): void
+    {
+        Http::fake([
+            'cate.mte-thomson.com.br/*' => Http::response('', 500),
+        ]);
+
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->set('data.codigo', '206.82')
+            ->call('search')
+            ->call('fetchLiveResultFor', $manufacturer->id)
+            ->assertSee('Não foi possível buscar ao vivo')
+            ->assertDontSee('Nenhum resultado encontrado');
+    }
+
+    public function test_add_live_result_to_quotation_creates_an_external_quotation_item(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $user = User::factory()->create(['role' => Role::SuperAdmin]);
+        $this->actingAs($user);
+
+        Livewire::test(CatalogDatabaseSearch::class)
+            ->call('addLiveResultToQuotation', $manufacturer->id, '206.82', 'VÁLVULA TERMOSTÁTICA');
+
+        $this->assertDatabaseHas('quotation_items', [
+            'source' => Source::Api,
+            'manufacturer_id' => $manufacturer->id,
+            'codigo' => '206.82',
+            'descricao' => 'VÁLVULA TERMOSTÁTICA',
+            'part_id' => null,
+        ]);
+    }
+
+    public function test_add_live_result_to_quotation_twice_toggles_it_back_off(): void
+    {
+        $manufacturer = Manufacturer::factory()->create(['is_active' => true, 'part_search_slug' => 'mte-thomson']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $component = Livewire::test(CatalogDatabaseSearch::class);
+        $component->call('addLiveResultToQuotation', $manufacturer->id, '206.82', 'VÁLVULA TERMOSTÁTICA');
+        $component->call('addLiveResultToQuotation', $manufacturer->id, '206.82', 'VÁLVULA TERMOSTÁTICA');
+
+        $this->assertDatabaseMissing('quotation_items', [
+            'source' => Source::Api,
+            'manufacturer_id' => $manufacturer->id,
+            'codigo' => '206.82',
+        ]);
     }
 
     public function test_search_requires_at_least_one_manufacturer_selected(): void

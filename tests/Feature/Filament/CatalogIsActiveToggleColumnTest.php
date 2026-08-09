@@ -47,4 +47,19 @@ class CatalogIsActiveToggleColumnTest extends TestCase
 
         $this->assertFalse($catalog->refresh()->is_active);
     }
+
+    public function test_toggle_activates_a_catalog_with_a_scraper_before_the_first_import(): void
+    {
+        $catalog = Catalog::factory()->create([
+            'is_active' => false,
+            'import_status' => ImportStatus::NotImported,
+            'scraper_slug' => 'willtec',
+        ]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(ListCatalogs::class)
+            ->call('updateTableColumnState', 'is_active', (string) $catalog->getKey(), true);
+
+        $this->assertTrue($catalog->refresh()->is_active);
+    }
 }

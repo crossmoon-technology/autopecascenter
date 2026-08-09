@@ -79,6 +79,17 @@
             font-size: 0.8125rem;
             opacity: 0.65;
         }
+        .pe-result-notice-loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pe-tab-loading-indicator {
+            width: 1rem;
+            height: 1rem;
+            display: inline-block;
+            vertical-align: middle;
+        }
         .pe-result-heading {
             display: flex;
             align-items: center;
@@ -321,6 +332,18 @@
             overflow-y: auto;
             padding-right: 0.25rem;
         }
+        .pe-live-pager {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(127, 127, 127, 0.15);
+        }
+        .pe-live-pager-info {
+            font-size: 0.8125rem;
+            opacity: 0.7;
+        }
 
         .pe-search-button {
             display: inline-flex;
@@ -405,7 +428,21 @@
         </x-filament::section>
 
         <div class="pe-search-form-wrap">
-            <form wire:submit="search">
+            {{--
+                search() só faz a busca na Base de dados e devolve os ids de fabricante
+                com busca ao vivo pendente — encadear fetchLiveResultFor() aqui (em vez de
+                fazer os dois dentro do mesmo método PHP) é o que deixa a aba aparecer com
+                o spinner na hora, sem o navegador travar esperando o site do fabricante
+                responder antes de desenhar a página com o resto dos resultados.
+
+                x-on:submit.prevent (Alpine puro) em vez de wire:submit="expressão composta"
+                de propósito — wire:submit só garante o preventDefault automático pra uma
+                chamada de método simples; com uma expressão encadeada (.then(...)) o
+                comportamento não é garantido, e sem o preventDefault o formulário faz um
+                submit nativo de verdade (recarrega a página), que foi exatamente o bug
+                relatado (a aba nunca aparecia).
+            --}}
+            <form x-on:submit.prevent="$wire.search().then(ids => ids.forEach(id => $wire.fetchLiveResultFor(id)))">
                 {{ $this->form }}
 
                 <button
@@ -447,7 +484,10 @@
                     @foreach ($selectedManufacturers as $manufacturer)
                         @php
                             $parts = $results[$manufacturer->id] ?? collect();
+                            $livePage = $liveResults[$manufacturer->id] ?? null;
+                            $live = $livePage?->results ?? collect();
                             $manufacturerImage = $manufacturer->icon ?? $manufacturer->logo;
+                            $isLivePending = in_array($manufacturer->id, $liveSearchPending, true);
                         @endphp
 
                         <button
@@ -456,7 +496,8 @@
                             x-on:click="activeTab = {{ $manufacturer->id }}"
                             x-bind:aria-selected="(activeTab === {{ $manufacturer->id }}).toString()"
                             x-bind:class="activeTab === {{ $manufacturer->id }} ? 'pe-tab-active' : ''"
-                            class="pe-tab @if ($parts->isNotEmpty()) pe-tab-has-results @endif"
+                            class="pe-tab @if ($parts->isNotEmpty() || $live->isNotEmpty()) pe-tab-has-results @endif"
+                            wire:key="pe-tab-{{ $manufacturer->id }}"
                         >
                             @if ($manufacturerImage)
                                 <span class="pe-result-heading-icon">
@@ -465,7 +506,16 @@
                             @else
                                 <span class="pe-result-heading-icon pe-result-heading-icon-placeholder"></span>
                             @endif
-                            <span class="pe-tab-name">{{ $manufacturer->name }} <span class="pe-tab-count">({{ $parts->count() }})</span></span>
+                            <span class="pe-tab-name">
+                                {{ $manufacturer->name }}
+                                @if ($isLivePending)
+                                    <x-filament::loading-indicator class="pe-tab-loading-indicator" />
+                                @else
+                                    {{-- $livePage->total é o total real no site do fabricante (pode abranger
+                                         várias páginas) — sem ele, cai pra contar só o que veio nesta página. --}}
+                                    <span class="pe-tab-count">({{ $parts->count() + ($livePage?->total ?? $live->count()) }})</span>
+                                @endif
+                            </span>
                         </button>
                     @endforeach
                 </div>
@@ -473,6 +523,10 @@
                 @foreach ($selectedManufacturers as $manufacturer)
                     @php
                         $parts = $results[$manufacturer->id] ?? collect();
+                        $livePage = $liveResults[$manufacturer->id] ?? null;
+                        $live = $livePage?->results ?? collect();
+                        $liveFailed = in_array($manufacturer->id, $liveSearchFailed, true);
+                        $isLivePending = in_array($manufacturer->id, $liveSearchPending, true);
                     @endphp
 
                     <div
@@ -482,16 +536,77 @@
                         wire:key="pe-result-{{ $manufacturer->id }}"
                         data-manufacturer-panel="{{ $manufacturer->id }}"
                     >
-                        @if ($parts->isEmpty())
-                            <p class="pe-result-notice">Nenhum resultado encontrado em {{ $manufacturer->name }}.</p>
+                        @if ($liveFailed)
+                            <p class="pe-result-notice">Não foi possível buscar ao vivo em {{ $manufacturer->name }} agora. Tente novamente em instantes.</p>
+                        @endif
+                        @if ($isLivePending && $parts->isEmpty() && $live->isEmpty())
+                            <p class="pe-result-notice pe-result-notice-loading">
+                                <x-filament::loading-indicator class="pe-tab-loading-indicator" />
+                                Buscando ao vivo em {{ $manufacturer->name }}&hellip;
+                            </p>
+                        @elseif ($parts->isEmpty() && $live->isEmpty())
+                            @unless ($liveFailed)
+                                <p class="pe-result-notice">Nenhum resultado encontrado em {{ $manufacturer->name }}.</p>
+                            @endunless
                         @else
                             <div class="pe-tab-panel-scroll">
                                 <div class="pe-part-grid">
                                     @foreach ($parts as $part)
                                         @include('filament.pages.buscas.partials.catalog-search-part-card', ['part' => $part])
                                     @endforeach
+                                    @foreach ($live as $result)
+                                        @include('filament.pages.buscas.partials.live-search-result-card', ['result' => $result, 'manufacturer' => $manufacturer])
+                                    @endforeach
                                 </div>
                             </div>
+
+                            {{--
+                                O site do fabricante pagina os resultados dele (ver
+                                MteThomsonPartSearchProvider) — só aparece quando tem mais de uma
+                                página (hasMultiplePages()), já que a maioria das buscas na Base de
+                                dados nem passa por essa consulta ao vivo. wire:loading/wire:target
+                                aqui (em vez do fluxo em duas fases via $liveSearchPending do envio
+                                inicial) porque trocar de página já é uma chamada Livewire só, sem
+                                a necessidade de fazer a aba aparecer antes da resposta.
+                            --}}
+                            @if ($livePage?->hasMultiplePages())
+                                <div class="pe-live-pager" wire:key="pe-live-pager-{{ $manufacturer->id }}">
+                                    <button
+                                        type="button"
+                                        wire:click="fetchLiveResultFor({{ $manufacturer->id }}, {{ $livePage->currentPage - 1 }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="fetchLiveResultFor"
+                                        @disabled($livePage->currentPage <= 1)
+                                        class="pe-part-action-btn"
+                                        title="Página anterior"
+                                    >
+                                        <x-filament::icon icon="heroicon-o-chevron-left" />
+                                    </button>
+
+                                    <span class="pe-live-pager-info">
+                                        Página {{ $livePage->currentPage }} de {{ $livePage->lastPage }}
+                                        @if ($livePage->total !== null)
+                                            &mdash; Total de itens: {{ $livePage->total }}
+                                        @endif
+                                    </span>
+
+                                    <span wire:loading wire:target="fetchLiveResultFor">
+                                        <x-filament::loading-indicator class="pe-tab-loading-indicator" />
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        wire:click="fetchLiveResultFor({{ $manufacturer->id }}, {{ $livePage->currentPage + 1 }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="fetchLiveResultFor"
+                                        @disabled($livePage->currentPage >= $livePage->lastPage)
+                                        class="pe-part-action-btn"
+                                        title="Próxima página"
+                                    >
+                                        <x-filament::icon icon="heroicon-o-chevron-right" />
+                                    </button>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 @endforeach

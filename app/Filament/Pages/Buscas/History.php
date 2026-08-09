@@ -45,7 +45,7 @@ class History extends Page implements HasTable
 
     protected function helpDescription(): string
     {
-        return '<p>Toda busca feita na Base de dados ou na API fica registrada aqui, com as suas 100 mais recentes.</p>'.
+        return '<p>Toda busca feita na Base de dados fica registrada aqui, com as suas 100 mais recentes.</p>'.
             '<p>Clique em qualquer linha pra repetir a busca com o mesmo termo.</p>';
     }
 
@@ -67,10 +67,10 @@ class History extends Page implements HasTable
                 return SearchHistory::query()->whereIn('id', $recentIds);
             })
             ->recordUrl(fn (SearchHistory $record): string => match ($record->method) {
-                Method::Api => Api::getUrl(['codigo' => $record->query]),
-                // Equivalence é o método legado do extinto "Achar código original" — essa
-                // busca vive só na Base de dados agora, então linhas antigas caem aqui.
-                Method::Database, Method::Equivalence => CatalogDatabaseSearch::getUrl(['codigo' => $record->query]),
+                // Api e Equivalence são métodos extintos (a aba API foi removida; Equivalence
+                // era o "Achar código original" de antes) — linhas antigas com esses métodos
+                // caem na Base de dados, a única busca "ao vivo" que restou.
+                Method::Database, Method::Api, Method::Equivalence => CatalogDatabaseSearch::getUrl(['codigo' => $record->query]),
             })
             ->columns([
                 TextColumn::make('query')
@@ -86,7 +86,7 @@ class History extends Page implements HasTable
             ])
             ->defaultSort('created_at', 'desc')
             ->emptyStateHeading('Nenhuma busca registrada ainda')
-            ->emptyStateDescription('Suas buscas em Base de dados e API vão aparecer aqui.')
+            ->emptyStateDescription('Suas buscas em Base de dados vão aparecer aqui.')
             ->emptyStateIcon(Heroicon::OutlinedClock);
     }
 }

@@ -4,14 +4,23 @@ namespace App\Services\PartSearch;
 
 use Livewire\Wireable;
 
+/**
+ * One result from a live (not bulk-imported) manufacturer search — see
+ * PartSearchProvider. Ephemeral: never persisted, has no Part id to hang a
+ * favorite/quotation off of the normal way (see
+ * Filament\Pages\Buscas\CatalogDatabaseSearch's live-results handling).
+ */
 final readonly class PartSearchResult implements Wireable
 {
+    /**
+     * @param  array<int, string>  $conversoes
+     */
     public function __construct(
         public string $codigo,
         public string $descricao,
         public ?string $imagem_url = null,
-        public ?string $montadora = null,
-        public ?string $modelo = null,
+        public ?string $aplicacao = null,
+        public array $conversoes = [],
         public ?string $product_url = null,
     ) {}
 
@@ -21,8 +30,8 @@ final readonly class PartSearchResult implements Wireable
             'codigo' => $this->codigo,
             'descricao' => $this->descricao,
             'imagem_url' => $this->imagem_url,
-            'montadora' => $this->montadora,
-            'modelo' => $this->modelo,
+            'aplicacao' => $this->aplicacao,
+            'conversoes' => $this->conversoes,
             'product_url' => $this->product_url,
         ];
     }
@@ -33,8 +42,8 @@ final readonly class PartSearchResult implements Wireable
             codigo: $value['codigo'],
             descricao: $value['descricao'],
             imagem_url: $value['imagem_url'],
-            montadora: $value['montadora'],
-            modelo: $value['modelo'],
+            aplicacao: $value['aplicacao'],
+            conversoes: $value['conversoes'],
             product_url: $value['product_url'],
         );
     }

@@ -5,12 +5,14 @@ namespace App\Filament\Resources\Catalogs\Schemas;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
 use App\Rules\ValidJsonl;
+use App\Services\CatalogScraping\CatalogScraperRegistry;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
@@ -43,13 +45,39 @@ class CatalogForm
                     ->label('Descrição')
                     ->rows(3)
                     ->columnSpanFull(),
+                Select::make('scraper_slug')
+                    ->label('Provedor de scraping')
+                    ->options(fn () => app(CatalogScraperRegistry::class)->options())
+                    ->native(false)
+                    ->live()
+                    ->unique(ignoreRecord: true)
+                    ->disabled(fn (Get $get): bool => filled($get('file')))
+                    ->rules([
+                        fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                            if (filled($value) && filled($get('file'))) {
+                                $fail('Não é possível selecionar um provedor de scraping com um arquivo de importação já definido.');
+                            }
+                        },
+                    ])
+                    ->helperText(fn (Get $get): string => filled($get('file'))
+                        ? 'Não é possível selecionar um provedor enquanto houver um arquivo de importação manual definido abaixo.'
+                        : 'Opcional — cada provedor só pode ser usado por um catálogo. Se selecionado, o catálogo é buscado e reimportado automaticamente todo dia a partir da fonte configurada, e o arquivo abaixo passa a ser gerenciado pelo sistema em vez de enviado manualmente.'),
                 FileUpload::make('file')
                     ->label('Arquivo original')
                     ->rules(['extensions:jsonl', new ValidJsonl])
+                    ->rules([
+                        fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                            if (filled($value) && filled($get('scraper_slug'))) {
+                                $fail('Não é possível enviar um arquivo manual com um provedor de scraping já selecionado.');
+                            }
+                        },
+                    ])
                     ->directory('catalogs')
-                    ->disabled(fn (?Catalog $record): bool => $record !== null && $record->import_status !== ImportStatus::NotImported)
-                    ->helperText(fn (?Catalog $record): ?string => match (true) {
-                        $record === null => 'Opcional — sem arquivo, as peças podem ser enviadas depois pela API de importação de catálogo.',
+                    ->live()
+                    ->disabled(fn (?Catalog $record, Get $get): bool => filled($get('scraper_slug')) || ($record !== null && $record->import_status !== ImportStatus::NotImported))
+                    ->helperText(fn (?Catalog $record, Get $get): ?string => match (true) {
+                        filled($get('scraper_slug')) => 'Gerenciado automaticamente pelo provedor de scraping selecionado acima — não é possível enviar um arquivo manual enquanto um provedor estiver selecionado.',
+                        $record === null => 'Opcional — sem arquivo, as peças podem ser enviadas depois pela API de importação de catálogo, ou selecione um provedor de scraping acima.',
                         $record->import_status === ImportStatus::Imported => 'Não é possível anexar um novo arquivo enquanto as peças importadas existirem. Exclua as peças deste catálogo (na listagem de catálogos) para liberar este campo.',
                         $record->import_status === ImportStatus::Importing => 'Não é possível anexar um novo arquivo enquanto a importação estiver em andamento.',
                         default => null,
@@ -80,9 +108,10 @@ class CatalogForm
                 Toggle::make('is_active')
                     ->label('Ativo')
                     ->required()
-                    ->disabled(fn (?Catalog $record): bool => $record?->import_status !== ImportStatus::Imported)
-                    ->helperText(fn (?Catalog $record): string => match (true) {
-                        $record === null => 'Só pode ser ativado depois que a importação for executada.',
+                    ->disabled(fn (?Catalog $record, Get $get): bool => blank($get('scraper_slug')) && $record?->import_status !== ImportStatus::Imported)
+                    ->helperText(fn (?Catalog $record, Get $get): string => match (true) {
+                        filled($get('scraper_slug')) => 'Provedor de scraping selecionado — pode ser ativado mesmo antes da primeira importação automática.',
+                        $record === null => 'Só pode ser ativado depois que a importação for executada, ou selecione um provedor de scraping acima.',
                         $record->import_status === ImportStatus::NotImported => 'Não é possível ativar: a importação deste catálogo ainda não foi executada.',
                         $record->import_status === ImportStatus::Importing => 'Não é possível ativar: a importação está em andamento.',
                         default => 'Catálogo importado — você pode ativá-lo ou desativá-lo.',

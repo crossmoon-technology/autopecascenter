@@ -3,7 +3,6 @@
 namespace Tests\Feature\Filament;
 
 use App\Enums\Role;
-use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
 use App\Filament\Pages\Buscas\Iframes;
 use App\Models\User;
@@ -23,18 +22,10 @@ class BuscasNavigationGroupTest extends TestCase
         Livewire::test(Iframes::class)->assertSuccessful();
     }
 
-    public function test_api_page_renders(): void
-    {
-        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
-
-        Livewire::test(Api::class)->assertSuccessful();
-    }
-
-    public function test_all_three_search_pages_share_the_buscas_navigation_group(): void
+    public function test_both_search_pages_share_the_buscas_navigation_group(): void
     {
         $this->assertSame('Buscas', Iframes::getNavigationGroup());
         $this->assertSame('Buscas', CatalogDatabaseSearch::getNavigationGroup());
-        $this->assertSame('Buscas', Api::getNavigationGroup());
     }
 
     public function test_configuracoes_is_always_the_last_navigation_group(): void

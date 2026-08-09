@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Manufacturers\Schemas;
 
+use App\Services\PartSearch\PartSearchProviderRegistry;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Set;
@@ -27,6 +29,12 @@ class ManufacturerForm
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
+                Select::make('part_search_slug')
+                    ->label('Provedor de busca ao vivo')
+                    ->options(fn () => app(PartSearchProviderRegistry::class)->options())
+                    ->native(false)
+                    ->unique(ignoreRecord: true)
+                    ->helperText('Opcional — só pra fabricantes sem raspagem em bloco viável (ver CatalogScraperRegistry/config/scrapers.php), onde a busca é feita ao vivo no site do fabricante a cada consulta, direto na página "Base de dados". Não precisa de catálogo nenhum cadastrado.'),
                 FileUpload::make('logo')
                     ->image()
                     ->disk('public')

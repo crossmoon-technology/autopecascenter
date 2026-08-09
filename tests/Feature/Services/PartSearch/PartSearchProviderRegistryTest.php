@@ -3,9 +3,8 @@
 namespace Tests\Feature\Services\PartSearch;
 
 use App\Models\Manufacturer;
-use App\Services\PartSearch\Providers\CofapPartSearchProvider;
-use App\Services\PartSearch\Providers\HipperFreiosPartSearchProvider;
 use App\Services\PartSearch\PartSearchProviderRegistry;
+use App\Services\PartSearch\Providers\MteThomsonPartSearchProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,32 +12,34 @@ class PartSearchProviderRegistryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_resolves_cofap_and_magneti_marelli_to_the_cofap_provider(): void
+    public function test_resolves_mte_thomson_to_its_own_provider(): void
     {
-        $registry = new PartSearchProviderRegistry;
+        // De propósito com um slug de identidade diferente — a resolução usa
+        // part_search_slug, não Manufacturer.slug (desacoplado: renomear o
+        // fabricante nunca quebra a busca ao vivo silenciosamente).
+        $manufacturer = Manufacturer::factory()->create(['slug' => 'mte-thomson-brasil', 'part_search_slug' => 'mte-thomson']);
 
-        $cofap = Manufacturer::factory()->create(['slug' => 'cofap']);
-        $magnetiMarelli = Manufacturer::factory()->create(['slug' => 'magneti-marelli']);
+        $provider = (new PartSearchProviderRegistry)->for($manufacturer);
 
-        $this->assertInstanceOf(CofapPartSearchProvider::class, $registry->for($cofap));
-        $this->assertInstanceOf(CofapPartSearchProvider::class, $registry->for($magnetiMarelli));
+        $this->assertInstanceOf(MteThomsonPartSearchProvider::class, $provider);
     }
 
-    public function test_resolves_hipper_freios_to_its_own_provider(): void
+    public function test_returns_null_when_part_search_slug_is_not_set(): void
     {
-        $registry = new PartSearchProviderRegistry;
+        $manufacturer = Manufacturer::factory()->create(['part_search_slug' => null]);
 
-        $hipperFreios = Manufacturer::factory()->create(['slug' => 'hipper-freios']);
-
-        $this->assertInstanceOf(HipperFreiosPartSearchProvider::class, $registry->for($hipperFreios));
+        $this->assertNull((new PartSearchProviderRegistry)->for($manufacturer));
     }
 
-    public function test_returns_null_for_a_manufacturer_without_a_provider(): void
+    public function test_returns_null_for_an_unrecognized_part_search_slug(): void
     {
-        $registry = new PartSearchProviderRegistry;
+        $manufacturer = Manufacturer::factory()->create(['part_search_slug' => 'sem-provider']);
 
-        $wega = Manufacturer::factory()->create(['slug' => 'wega']);
+        $this->assertNull((new PartSearchProviderRegistry)->for($manufacturer));
+    }
 
-        $this->assertNull($registry->for($wega));
+    public function test_options_lists_mte_thomson(): void
+    {
+        $this->assertSame(['mte-thomson' => 'MTE-Thomson'], (new PartSearchProviderRegistry)->options());
     }
 }

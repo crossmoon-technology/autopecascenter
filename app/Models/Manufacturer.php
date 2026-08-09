@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'slug', 'logo', 'icon', 'external_link', 'iframe_url', 'is_active'])]
+#[Fillable(['name', 'slug', 'part_search_slug', 'logo', 'icon', 'external_link', 'iframe_url', 'is_active'])]
 class Manufacturer extends Model
 {
     /** @use HasFactory<ManufacturerFactory> */

@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Filament\Resources\Catalogs\Pages\ListCatalogs;
 use App\Jobs\ImportCatalogParts;
 use App\Jobs\ImportCatalogPartsUpdate;
+use App\Jobs\ScrapeCatalog;
 use App\Models\Catalog;
 use App\Models\Catalog\Enums\ImportStatus;
 use App\Models\Part;
@@ -96,6 +97,71 @@ class CatalogTableTest extends TestCase
             ]);
 
         Bus::assertDispatched(ImportCatalogPartsUpdate::class, fn (ImportCatalogPartsUpdate $job): bool => $job->catalog->is($catalog));
+    }
+
+    /**
+     * O arquivo de um catálogo gerenciado por scraper é sobrescrito a cada
+     * execução do ScrapeCatalogs — uma atualização manual aqui seria perdida
+     * (ou pior, ficaria fora de sincronia com o source_version salvo).
+     */
+    public function test_upload_update_action_is_hidden_for_a_catalog_managed_by_a_scraper(): void
+    {
+        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::Imported, 'scraper_slug' => 'willtec']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(ListCatalogs::class)
+            ->assertTableActionHidden('uploadUpdate', record: $catalog);
+    }
+
+    public function test_run_scraper_action_is_only_visible_for_a_catalog_with_a_scraper(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $withScraper = Catalog::factory()->create(['scraper_slug' => 'willtec']);
+        $withoutScraper = Catalog::factory()->create(['scraper_slug' => null]);
+
+        Livewire::test(ListCatalogs::class)
+            ->assertTableActionVisible('runScraper', record: $withScraper)
+            ->assertTableActionHidden('runScraper', record: $withoutScraper);
+    }
+
+    public function test_run_scraper_action_is_hidden_while_an_import_is_in_progress(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $catalog = Catalog::factory()->create(['scraper_slug' => 'willtec', 'import_status' => ImportStatus::Importing]);
+
+        Livewire::test(ListCatalogs::class)
+            ->assertTableActionHidden('runScraper', record: $catalog);
+    }
+
+    public function test_run_scraper_action_dispatches_the_job_for_that_catalog(): void
+    {
+        Bus::fake();
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $catalog = Catalog::factory()->create(['scraper_slug' => 'willtec']);
+        $otherCatalog = Catalog::factory()->create(['scraper_slug' => null]);
+
+        Livewire::test(ListCatalogs::class)
+            ->callTableAction('runScraper', record: $catalog);
+
+        Bus::assertDispatched(ScrapeCatalog::class, fn (ScrapeCatalog $job): bool => $job->catalog->is($catalog));
+        Bus::assertNotDispatched(ScrapeCatalog::class, fn (ScrapeCatalog $job): bool => $job->catalog->is($otherCatalog));
+    }
+
+    /**
+     * Reproduz o bug relatado: o botão precisa travar assim que clicado, não só
+     * depois que o job (rodando em fila, pode demorar) terminar.
+     */
+    public function test_run_scraper_action_marks_the_catalog_as_importing_immediately(): void
+    {
+        Bus::fake();
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $catalog = Catalog::factory()->create(['scraper_slug' => 'willtec', 'import_status' => ImportStatus::NotImported]);
+
+        Livewire::test(ListCatalogs::class)
+            ->callTableAction('runScraper', record: $catalog)
+            ->assertTableActionHidden('runScraper', record: $catalog->refresh());
+
+        $this->assertSame(ImportStatus::Importing, $catalog->import_status);
     }
 
     public function test_upload_update_action_rejects_a_non_jsonl_file(): void

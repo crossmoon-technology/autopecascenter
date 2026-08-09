@@ -12,7 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['manufacturer_id', 'name', 'slug', 'descricao', 'file', 'extracted_at', 'is_active'])]
+// update_file e source_version ficam fora do Fillable de propósito: só os jobs/
+// comandos de import (ImportCatalogPartsUpdate, ScrapeCatalogs) devem escrevê-los,
+// via forceFill(), nunca por preenchimento em massa vindo de um form do painel.
+// scraper_slug é a exceção: é escolhido pelo próprio admin no form (ver
+// CatalogForm) — identifica a entrada de config/scrapers.php usada pelo
+// ScrapeCatalogs para reimportar esse catálogo automaticamente.
+#[Fillable(['manufacturer_id', 'name', 'slug', 'descricao', 'file', 'extracted_at', 'is_active', 'scraper_slug'])]
 class Catalog extends Model
 {
     /** @use HasFactory<CatalogFactory> */

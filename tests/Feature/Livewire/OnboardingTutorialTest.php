@@ -6,7 +6,6 @@ use App\Enums\Role;
 use App\Filament\Client\Pages\CreateOrder;
 use App\Filament\Client\Pages\Manufacturers;
 use App\Filament\Client\Pages\OrderHistory;
-use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
 use App\Filament\Pages\Buscas\Iframes;
 use App\Filament\Pages\Buscas\Orders;
@@ -108,7 +107,7 @@ class OnboardingTutorialTest extends TestCase
         }
     }
 
-    public function test_seller_steps_highlight_each_of_the_3_search_menus_separately(): void
+    public function test_seller_steps_highlight_each_of_the_2_search_menus_separately(): void
     {
         $this->actingAs(User::factory()->create(['role' => Role::Seller, 'tutorial_completed_at' => null]));
 
@@ -117,7 +116,6 @@ class OnboardingTutorialTest extends TestCase
 
         $this->assertContains('a[href="'.Iframes::getUrl(panel: 'admin').'"]', $selectors);
         $this->assertContains('a[href="'.CatalogDatabaseSearch::getUrl(panel: 'admin').'"]', $selectors);
-        $this->assertContains('a[href="'.Api::getUrl(panel: 'admin').'"]', $selectors);
     }
 
     public function test_client_flow_is_a_guided_order_ending_at_create_order_and_history(): void

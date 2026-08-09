@@ -82,4 +82,43 @@ class CatalogIsActiveTest extends TestCase
 
         $this->assertFalse($catalog->refresh()->is_active);
     }
+
+    /**
+     * Um catálogo com provedor de scraping não depende do botão manual de
+     * "Importar" — liberamos o toggle mesmo antes da 1ª execução automática.
+     */
+    public function test_is_active_can_be_set_to_true_on_create_when_a_scraper_is_selected(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $manufacturer = Manufacturer::factory()->create();
+
+        Livewire::test(CreateCatalog::class)
+            ->fillForm([
+                'manufacturer_id' => $manufacturer->getKey(),
+                'name' => 'Catálogo via scraper',
+                'scraper_slug' => 'willtec',
+                'is_active' => true,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue(Catalog::firstOrFail()->is_active);
+    }
+
+    public function test_is_active_can_be_toggled_on_edit_before_import_when_a_scraper_is_selected(): void
+    {
+        $catalog = Catalog::factory()->create([
+            'is_active' => false,
+            'import_status' => ImportStatus::NotImported,
+            'scraper_slug' => 'willtec',
+        ]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(EditCatalog::class, ['record' => $catalog->getKey()])
+            ->fillForm(['is_active' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($catalog->refresh()->is_active);
+    }
 }

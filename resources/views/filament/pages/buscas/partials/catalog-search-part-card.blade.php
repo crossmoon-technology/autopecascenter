@@ -25,7 +25,7 @@
                         @foreach ($this->equivalenceCodes($codigos) as $equivalenceCode)
                             <button
                                 type="button"
-                                wire:click="searchFor('{{ $equivalenceCode }}')"
+                                x-on:click="$wire.searchFor('{{ $equivalenceCode }}').then(ids => ids.forEach(id => $wire.fetchLiveResultFor(id)))"
                                 wire:key="pe-equivalence-{{ $part->id }}-{{ $marca }}-{{ $equivalenceCode }}"
                                 class="pe-equivalence-chip"
                             >

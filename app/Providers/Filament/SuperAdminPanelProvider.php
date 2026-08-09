@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Ajuda\Faq;
-use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
 use App\Filament\Pages\Buscas\Clients;
 use App\Filament\Pages\Buscas\Favorites;
@@ -88,7 +87,6 @@ class SuperAdminPanelProvider extends PanelProvider
                 Faq::class,
                 Iframes::class,
                 CatalogDatabaseSearch::class,
-                Api::class,
                 History::class,
                 Favorites::class,
                 ViewFavoriteList::class,

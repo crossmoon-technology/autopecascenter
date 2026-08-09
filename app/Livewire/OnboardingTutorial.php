@@ -6,7 +6,6 @@ use App\Enums\Role;
 use App\Filament\Client\Pages\CreateOrder;
 use App\Filament\Client\Pages\Manufacturers as ClientManufacturers;
 use App\Filament\Client\Pages\OrderHistory;
-use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
 use App\Filament\Pages\Buscas\Clients;
 use App\Filament\Pages\Buscas\Iframes;
@@ -104,10 +103,10 @@ class OnboardingTutorial extends Component
      * navegação de verdade — até Pedidos, pra destacar o botão "Novo pedido" (ver
      * App\Filament\Pages\Buscas\Orders, id onboarding-target-create-order).
      *
-     * As buscas são 3 menus diferentes (Iframes, Base de dados e API), cada um com sua
+     * As buscas são 2 menus diferentes (Iframes e Base de dados), cada um com sua
      * própria forma de buscar — por isso um passo pra cada um, em vez de um só passo
-     * genérico apontando só pro Iframes enquanto o texto menciona os outros dois sem
-     * destacar onde eles ficam.
+     * genérico apontando só pro Iframes enquanto o texto menciona o outro sem
+     * destacar onde ele fica.
      *
      * @return array<int, array{selector: string, url: string, title: string, description: string}>
      */
@@ -117,7 +116,6 @@ class OnboardingTutorial extends Component
         $dashboardUrl = Dashboard::getUrl(panel: $panel);
         $iframesUrl = Iframes::getUrl(panel: $panel);
         $catalogDatabaseSearchUrl = CatalogDatabaseSearch::getUrl(panel: $panel);
-        $apiUrl = Api::getUrl(panel: $panel);
         $clientesUrl = Clients::getUrl(panel: $panel);
         $pedidosUrl = Orders::getUrl(panel: $panel);
 
@@ -138,13 +136,7 @@ class OnboardingTutorial extends Component
                 'selector' => 'a[href="'.$catalogDatabaseSearchUrl.'"]',
                 'url' => $dashboardUrl,
                 'title' => 'Também dá pra buscar na nossa base',
-                'description' => 'Em Base de dados, a busca é nos catálogos e peças já cadastrados aqui na plataforma.',
-            ],
-            [
-                'selector' => 'a[href="'.$apiUrl.'"]',
-                'url' => $dashboardUrl,
-                'title' => 'E também via API',
-                'description' => 'Pra quem prefere integrar por sistema. Em qualquer uma dessas 3 buscas, tudo fica guardado no Histórico, e as peças que você mais usa dá pra deixar favoritadas.',
+                'description' => 'Em Base de dados, a busca é nos catálogos e peças já cadastrados aqui na plataforma. Em qualquer uma dessas buscas, tudo fica guardado no Histórico, e as peças que você mais usa dá pra deixar favoritadas.',
             ],
             [
                 'selector' => 'a[href="'.$clientesUrl.'"]',

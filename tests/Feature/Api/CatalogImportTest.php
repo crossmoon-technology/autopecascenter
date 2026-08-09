@@ -128,6 +128,18 @@ class CatalogImportTest extends TestCase
         $this->assertSame($originalFile, $catalog->refresh()->file);
     }
 
+    public function test_rejects_a_catalog_managed_by_a_scraper(): void
+    {
+        $catalog = Catalog::factory()->create(['scraper_slug' => 'willtec']);
+
+        $response = $this->withHeader('X-Api-Key', self::API_KEY)->postJson('/api/catalogs/import', [
+            'slug' => $catalog->slug,
+            'file' => $this->jsonlUpload(),
+        ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['slug']);
+    }
+
     public function test_rejects_a_non_jsonl_file(): void
     {
         $catalog = Catalog::factory()->create(['import_status' => ImportStatus::Imported]);

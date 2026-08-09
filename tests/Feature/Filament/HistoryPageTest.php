@@ -3,7 +3,6 @@
 namespace Tests\Feature\Filament;
 
 use App\Enums\Role;
-use App\Filament\Pages\Buscas\Api;
 use App\Filament\Pages\Buscas\CatalogDatabaseSearch;
 use App\Filament\Pages\Buscas\History;
 use App\Models\SearchHistory;
@@ -59,7 +58,11 @@ class HistoryPageTest extends TestCase
             ->assertSee('Nenhuma busca registrada ainda');
     }
 
-    public function test_shows_the_api_method_badge(): void
+    /**
+     * Method::Api é o método legado da extinta aba "API" (removida do painel) —
+     * linhas antigas continuam existindo e devem seguir exibindo o badge normalmente.
+     */
+    public function test_shows_the_legacy_api_method_badge(): void
     {
         $user = User::factory()->create(['role' => Role::SuperAdmin]);
         SearchHistory::factory()->create([
@@ -90,7 +93,12 @@ class HistoryPageTest extends TestCase
         $this->assertSame(CatalogDatabaseSearch::getUrl(['codigo' => '16002']), $url);
     }
 
-    public function test_clicking_an_api_search_row_links_to_the_api_page_prefilled(): void
+    /**
+     * Method::Api é o método legado da extinta aba "API" — essa busca vive só
+     * na Base de dados agora, então linhas antigas caem lá (mesmo tratamento
+     * dado a Method::Equivalence, o outro método extinto).
+     */
+    public function test_clicking_a_legacy_api_search_row_links_to_the_database_page_prefilled(): void
     {
         $user = User::factory()->create(['role' => Role::SuperAdmin]);
         $record = SearchHistory::factory()->create([
@@ -102,7 +110,7 @@ class HistoryPageTest extends TestCase
 
         $url = Livewire::test(History::class)->instance()->getTable()->getRecordUrl($record);
 
-        $this->assertSame(Api::getUrl(['codigo' => 'HF-21']), $url);
+        $this->assertSame(CatalogDatabaseSearch::getUrl(['codigo' => 'HF-21']), $url);
     }
 
     public function test_clicking_a_legacy_equivalence_search_row_links_to_the_database_page_prefilled(): void

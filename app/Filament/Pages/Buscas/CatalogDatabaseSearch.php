@@ -10,7 +10,10 @@ use App\Filament\Pages\Buscas\Concerns\RecordsSearchHistory;
 use App\Filament\Pages\Buscas\Concerns\ResolvesPreferredManufacturers;
 use App\Models\Manufacturer;
 use App\Models\Part;
+use App\Models\QuotationItem\Enums\Source;
 use App\Models\SearchHistory\Enums\Method;
+use App\Services\PartSearch\PartSearchProviderRegistry;
+use App\Services\PartSearch\PartSearchResultPage;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -29,6 +32,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
+use Throwable;
 use UnitEnum;
 
 class CatalogDatabaseSearch extends Page implements HasActions, HasForms
@@ -112,6 +116,44 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
      */
     public array $quotedPartIds = [];
 
+    /**
+     * Resultados de busca AO VIVO (Services\PartSearch), por fabricante — pra
+     * fabricantes sem raspagem em bloco viável (ver PartSearchProviderRegistry),
+     * onde a Base de dados não tem Part nenhuma cadastrada. Cada entrada é a
+     * página (ver PartSearchResultPage) atualmente exibida pra aquele
+     * fabricante — o site do fabricante pagina os resultados dele (ver
+     * MteThomsonPartSearchProvider), então guarda a página inteira, não só a
+     * lista de resultados, pra aba saber se tem mais páginas e em qual está.
+     *
+     * @var array<int, PartSearchResultPage>
+     */
+    public array $liveResults = [];
+
+    /**
+     * Ids de fabricante cuja busca ao vivo falhou nessa rodada (site do fabricante
+     * fora do ar, timeout, etc.) — usado pra distinguir "deu erro" de "não achou
+     * nada" na view, já que os dois deixam $liveResults[$id] vazio.
+     *
+     * @var array<int>
+     */
+    public array $liveSearchFailed = [];
+
+    /**
+     * Ids de fabricante cuja busca ao vivo ainda está em andamento — o
+     * fetchLiveResultFor() de cada um é disparado pelo navegador SÓ depois que
+     * search()/searchFor() já retornou (ver o JS no x-on:submit/x-on:click da
+     * view), pra aba aparecer e mostrar o spinner na hora em vez de travar o
+     * envio inteiro do formulário esperando o site do fabricante responder.
+     *
+     * @var array<int>
+     */
+    public array $liveSearchPending = [];
+
+    /**
+     * @var array<string>
+     */
+    public array $quotedLiveKeys = [];
+
     public function mount(): void
     {
         // fill() sem argumentos hidrata os defaults de todos os campos (ex: tipo_busca)
@@ -128,6 +170,7 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
 
         $this->favoritedPartIds = Auth::user()->favoritedPartIds()->all();
         $this->quotedPartIds = $this->currentlyQuotedPartIds();
+        $this->quotedLiveKeys = $this->currentlyQuotedExternalKeys(Source::Api);
     }
 
     protected function getHeaderActions(): array
@@ -143,6 +186,7 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
     protected function helpDescription(): string
     {
         return '<p>Aqui a busca é feita direto nos catálogos e peças já cadastrados na nossa base — escolha o tipo de busca (código, equivalentes ou atributos), os fabricantes e digite o termo.</p>'.
+            '<p>Alguns fabricantes (sem catálogo importado, ex: MTE-Thomson) são consultados ao vivo no site deles a cada busca, em vez de vir da nossa base — os resultados aparecem juntos na mesma aba, só sem estrela de favorito (não tem cadastro fixo pra pendurar isso).</p>'.
             '<p>Os resultados aparecem em duas seções: "Resultados" respeita os fabricantes marcados acima. Já "Peças exatas" busca o código próprio nos fabricantes ativos NÃO marcados acima — pra achar peças mesmo de um fabricante que o cliente trouxe e você nem pensaria em marcar, sem repetir o que já apareceu em "Resultados". Se a peça encontrada tiver códigos de conversão pra outras marcas, essas peças equivalentes também aparecem juntas ali.</p>'.
             '<p>Os resultados aparecem na hora. Dá pra favoritar uma peça (estrela) ou adicionar direto à cotação, sem sair da página.</p>';
     }
@@ -184,13 +228,20 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
      * habilitou pra si: o objetivo dela é achar peças de um fabricante que ele nem
      * habilitou (e portanto nem aparece como chip aqui).
      *
+     * Também inclui fabricantes SEM catálogo nenhum, mas com um provedor de busca ao
+     * vivo registrado (ver PartSearchProviderRegistry) — casos como a MTE-Thomson, onde
+     * raspar o catálogo inteiro não é viável (ver ScrapeCatalog), mas ainda dá pra
+     * consultar o site do fabricante ao vivo a cada busca.
+     *
      * @return Collection<int, Manufacturer>
      */
     private function allActiveManufacturers(): Collection
     {
         return Manufacturer::query()
             ->where('is_active', true)
-            ->whereHas('catalogs', fn ($query) => $query->where('is_active', true))
+            ->where(fn (Builder $query) => $query
+                ->whereHas('catalogs', fn ($catalogQuery) => $catalogQuery->where('is_active', true))
+                ->orWhereNotNull('part_search_slug'))
             ->orderBy('name')
             ->get();
     }
@@ -207,23 +258,34 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
             ->all();
     }
 
-    public function search(): void
+    /**
+     * Retorna os ids de fabricante cuja busca ao vivo ficou pendente — a view
+     * encadeia isso (ver o x-on:submit no blade) chamando fetchLiveResultFor()
+     * pra cada um DEPOIS que essa resposta já chegou e a aba já apareceu com o
+     * spinner, em vez de fazer o navegador esperar o site do fabricante
+     * responder pra sequer desenhar a aba.
+     *
+     * @return array<int>
+     */
+    public function search(): array
     {
         $state = $this->form->getState();
 
-        $this->runSearch(trim($state['codigo']), $this->resolveSearchType($state['tipo_busca']));
+        return $this->runSearch(trim($state['codigo']), $this->resolveSearchType($state['tipo_busca']));
     }
 
     /**
      * Clicar num código de equivalência nos resultados de "Peças exatas" chama isso —
      * atualiza o campo pro código clicado e já refaz a busca com ele, sem sair da
      * página. Mantém o tipo de busca que já estava selecionado.
+     *
+     * @return array<int>
      */
-    public function searchFor(string $codigo): void
+    public function searchFor(string $codigo): array
     {
         $this->data['codigo'] = $codigo;
 
-        $this->runSearch(trim($codigo), $this->resolveSearchType($this->data['tipo_busca'] ?? null));
+        return $this->runSearch(trim($codigo), $this->resolveSearchType($this->data['tipo_busca'] ?? null));
     }
 
     /**
@@ -240,10 +302,16 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
         return SearchType::tryFrom((string) $value) ?? SearchType::Todos;
     }
 
-    private function runSearch(string $codigo, SearchType $tipoBusca): void
+    /**
+     * @return array<int>
+     */
+    private function runSearch(string $codigo, SearchType $tipoBusca): array
     {
         $this->hasSearched = true;
         $this->searchedCodigo = $codigo;
+        $this->liveResults = [];
+        $this->liveSearchFailed = [];
+        $this->liveSearchPending = [];
 
         if (empty($this->selectedManufacturerIds())) {
             Notification::make()
@@ -281,6 +349,7 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
             }
 
             $this->results = $results;
+            $this->liveSearchPending = $this->liveSearchableSelectedManufacturerIds();
         }
 
         // "Peças exatas" só considera fabricantes NÃO marcados no checkbox de propósito
@@ -288,11 +357,67 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
         // marcar, mas o que já apareceu em "Resultados" não precisa se repetir aqui.
         $this->computeExactResults($codigo);
 
-        $foundResults = collect($this->results)->flatten(1)->isNotEmpty()
+        $dbFoundResults = collect($this->results)->flatten(1)->isNotEmpty()
             || collect($this->exactResults)->flatten(1)->isNotEmpty();
+        // A busca ao vivo ainda não rodou nesse momento (ver fetchLiveResultFor — só
+        // é disparada pelo navegador depois que esse método já retornou), então só dá
+        // pra saber "achou" de verdade se a base já achou algo; do contrário fica null
+        // (resultado desconhecido ainda), não false — RecordsSearchHistory já foi
+        // desenhado pra aceitar isso.
+        $foundResults = match (true) {
+            $dbFoundResults => true,
+            $this->liveSearchPending !== [] => null,
+            default => false,
+        };
         $this->recordSearchHistory($codigo, Method::Database, $foundResults);
 
         $this->suggestFavoritingIfSearchedRepeatedly($codigo);
+
+        return $this->liveSearchPending;
+    }
+
+    /**
+     * @return array<int>
+     */
+    private function liveSearchableSelectedManufacturerIds(): array
+    {
+        $registry = app(PartSearchProviderRegistry::class);
+
+        return $this->activeManufacturers()
+            ->whereIn('id', $this->selectedManufacturerIds())
+            ->filter(fn (Manufacturer $manufacturer): bool => $registry->for($manufacturer) !== null)
+            ->pluck('id')
+            ->all();
+    }
+
+    /**
+     * Disparado pelo navegador (ver o x-on:submit/x-on:click na view) uma vez por
+     * fabricante retornado por search()/searchFor() — DEPOIS que a resposta inicial já
+     * chegou, pra aba daquele fabricante aparecer com o spinner na hora em vez do
+     * formulário inteiro travar esperando o site do fabricante responder. Uma falha
+     * (site fora do ar, timeout) não derruba a busca dos outros fabricantes — só marca
+     * esse como "falhou" (ver $liveSearchFailed) pra view avisar em vez de mostrar
+     * silenciosamente "nenhum resultado".
+     *
+     * Também usado pra trocar de página (ver os controles de paginação na view, que
+     * chamam de novo com $page > 1) — o resultado da página pedida simplesmente
+     * substitui o que já estava em $liveResults[$manufacturer_id], não acumula.
+     */
+    public function fetchLiveResultFor(int $manufacturer_id, int $page = 1): void
+    {
+        $manufacturer = $this->activeManufacturers()->firstWhere('id', $manufacturer_id);
+        $provider = $manufacturer !== null ? app(PartSearchProviderRegistry::class)->for($manufacturer) : null;
+
+        if ($provider !== null) {
+            try {
+                $this->liveResults[$manufacturer_id] = $provider->search($this->searchedCodigo, $page);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->liveSearchFailed[] = $manufacturer_id;
+            }
+        }
+
+        $this->liveSearchPending = array_values(array_diff($this->liveSearchPending, [$manufacturer_id]));
     }
 
     /**
@@ -589,6 +714,23 @@ class CatalogDatabaseSearch extends Page implements HasActions, HasForms
             $this->quotedPartIds[] = $part_id;
         } else {
             $this->quotedPartIds = array_values(array_diff($this->quotedPartIds, [$part_id]));
+        }
+    }
+
+    /**
+     * Mesma ideia de addToQuotation(), mas pra um PartSearchResult ao vivo (sem Part
+     * id) — reaproveita Source::Api, o mecanismo já existia pra itens externos de
+     * busca ao vivo (ver AddsToQuotation::toggleExternalItemInQuotation()).
+     */
+    public function addLiveResultToQuotation(int $manufacturer_id, string $codigo, ?string $descricao = null): void
+    {
+        $key = "{$manufacturer_id}|{$codigo}";
+        $isNowQuoted = $this->toggleExternalItemInQuotation(Source::Api, $manufacturer_id, $codigo, $descricao);
+
+        if ($isNowQuoted) {
+            $this->quotedLiveKeys[] = $key;
+        } else {
+            $this->quotedLiveKeys = array_values(array_diff($this->quotedLiveKeys, [$key]));
         }
     }
 }

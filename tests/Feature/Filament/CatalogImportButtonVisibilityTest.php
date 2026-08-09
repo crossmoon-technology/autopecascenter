@@ -41,4 +41,17 @@ class CatalogImportButtonVisibilityTest extends TestCase
         Livewire::test(ListCatalogs::class)
             ->assertTableActionHidden('import', record: $catalog);
     }
+
+    /**
+     * Um catálogo com scraper_slug é reimportado automaticamente pelo
+     * ScrapeCatalogs — disparar o import manual aqui não faz sentido nesse caso.
+     */
+    public function test_import_button_is_hidden_for_a_catalog_managed_by_a_scraper(): void
+    {
+        $catalog = Catalog::factory()->create(['import_status' => ImportStatus::NotImported, 'scraper_slug' => 'willtec']);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        Livewire::test(ListCatalogs::class)
+            ->assertTableActionHidden('import', record: $catalog);
+    }
 }

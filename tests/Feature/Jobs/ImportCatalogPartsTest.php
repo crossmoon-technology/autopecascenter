@@ -163,6 +163,32 @@ class ImportCatalogPartsTest extends TestCase
         $this->assertTrue($nakataPart->equivalentParts()->whereKey($cofapPart->id)->exists());
     }
 
+    public function test_skips_a_line_that_collides_with_a_soft_deleted_orphan_part(): void
+    {
+        // Reproduz um catálogo que foi soft-deletado (Catalog::booted() soft-deleta
+        // as peças junto) e depois restaurado sem que as peças fossem restauradas —
+        // o updateOrCreate não enxerga a peça soft-deletada (fora do escopo padrão),
+        // então tenta um INSERT que colide com o unique(catalog_id, codigo) de verdade.
+        Storage::fake('local');
+        $catalog = Catalog::factory()->create(['is_active' => false]);
+        $orphan = Part::factory()->for($catalog)->create(['codigo' => 'X1']);
+        $orphan->delete();
+
+        Storage::disk('local')->put($catalog->file, implode("\n", [
+            json_encode(['codigo' => 'X1', 'descricao' => 'Não deveria sobrescrever a órfã']),
+            json_encode(['codigo' => 'X2', 'descricao' => 'Peça nova']),
+        ]));
+
+        ImportCatalogParts::dispatchSync($catalog);
+
+        $catalog->refresh();
+        $this->assertTrue($catalog->is_active);
+        $this->assertSame(ImportStatus::Imported, $catalog->import_status);
+        $this->assertSame(1, Part::query()->where('catalog_id', $catalog->id)->count());
+        $this->assertNotNull(Part::query()->where('codigo', 'X2')->first());
+        $this->assertTrue(Part::onlyTrashed()->whereKey($orphan->id)->exists());
+    }
+
     public function test_does_not_activate_the_catalog_when_nothing_could_be_imported(): void
     {
         Storage::fake('local');
