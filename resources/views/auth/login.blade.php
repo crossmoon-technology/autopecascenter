@@ -58,7 +58,9 @@
 
                 <div class="login-form__forgot">
                     <a href="{{ route('password.request') }}">Esqueci minha senha</a>
-                    <a href="{{ route('verification.resend.show') }}">Não recebeu o e-mail de confirmação?</a>
+                    @error('unverified')
+                        <a href="{{ route('verification.resend.show') }}">Não recebeu o e-mail de confirmação?</a>
+                    @enderror
                 </div>
 
                 <div class="login-form__remember">

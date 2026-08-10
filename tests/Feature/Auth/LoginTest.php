@@ -108,8 +108,33 @@ class LoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertSessionHasErrors(['email' => EmailNotVerifiedException::MESSAGE]);
+        $response->assertSessionHasErrors(['email' => EmailNotVerifiedException::MESSAGE, 'unverified']);
         $this->assertGuest();
+    }
+
+    /**
+     * O link "Reenviar e-mail de confirmação" só deve aparecer quando o
+     * bloqueio é especificamente por e-mail não confirmado — não em
+     * qualquer erro de login (ver a chave `unverified` própria em
+     * EmailNotVerifiedException, distinta de InvalidCredentialsException,
+     * que também usa a chave `email`).
+     */
+    public function test_shows_the_resend_verification_link_when_blocked_for_an_unverified_email(): void
+    {
+        $user = User::factory()->seller()->unverified()->create(['password' => bcrypt('password')]);
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+        $response = $this->get('/login');
+
+        $response->assertSee('Não recebeu o e-mail de confirmação?');
+    }
+
+    public function test_does_not_show_the_resend_verification_link_for_invalid_credentials(): void
+    {
+        $this->post('/login', ['email' => 'ghost@example.com', 'password' => 'wrong']);
+        $response = $this->get('/login');
+
+        $response->assertDontSee('Não recebeu o e-mail de confirmação?');
     }
 
     /**
