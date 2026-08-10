@@ -12,6 +12,7 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterClientRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResendVerificationRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
 use App\Services\Auth\AuthService;
@@ -124,6 +125,21 @@ class AuthController extends Controller
         }
 
         return redirect()->route('login')->with('status', 'E-mail confirmado! Faça login para continuar.');
+    }
+
+    public function showResendVerification(): View
+    {
+        return view('auth.resend-verification');
+    }
+
+    public function resendVerification(ResendVerificationRequest $request): RedirectResponse
+    {
+        $this->authService->resendVerificationEmail($request);
+
+        return back()->with(
+            'status',
+            'Se o e-mail informado tiver um cadastro pendente de confirmação, reenviamos o link agora.'
+        );
     }
 
     public function logout(Request $request): RedirectResponse

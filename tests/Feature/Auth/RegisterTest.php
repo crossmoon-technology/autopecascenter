@@ -62,7 +62,7 @@ class RegisterTest extends TestCase
 
         $user = User::query()->where('email', 'maria@example.com')->firstOrFail();
 
-        Mail::assertSent(VerifyEmailMail::class, fn (VerifyEmailMail $mail): bool => $mail->user->is($user));
+        Mail::assertQueued(VerifyEmailMail::class, fn (VerifyEmailMail $mail): bool => $mail->user->is($user));
     }
 
     public function test_rejects_registration_from_an_ip_already_used_by_another_account(): void
