@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\PlanChoiceRequest;
 use App\Http\Requests\Auth\RegisterClientRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResendVerificationRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Mail\Auth\VerifyEmailMail;
 use App\Models\User;
@@ -14,6 +15,7 @@ use App\Models\User\Enums\Plan;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -170,5 +172,33 @@ class AuthService
                 event(new PasswordReset($user));
             }
         );
+    }
+
+    /**
+     * Sempre silenciosa (nunca revela se o e-mail existe/já está verificado —
+     * mesmo princípio do Password::sendResetLink()) e com o mesmo cooldown de
+     * 60s usado pra reset de senha (config('auth.passwords.users.throttle')),
+     * pra não virar um jeito de bombardear a caixa de entrada de alguém.
+     * Existe pra dar uma saída pra quem nunca recebeu o e-mail de confirmação
+     * original (ex: uma instabilidade do provedor de e-mail) — antes disso a
+     * conta ficava travada pra sempre em "confirme seu e-mail antes de entrar".
+     */
+    public function resendVerificationEmail(ResendVerificationRequest $request): void
+    {
+        $user = User::where('email', $request->validated('email'))->first();
+
+        if ($user === null || $user->hasVerifiedEmail()) {
+            return;
+        }
+
+        $throttleKey = "resend-verification:{$user->id}";
+
+        if (Cache::has($throttleKey)) {
+            return;
+        }
+
+        Cache::put($throttleKey, true, config('auth.passwords.users.throttle', 60));
+
+        Mail::to($user->email)->send(new VerifyEmailMail($user));
     }
 }

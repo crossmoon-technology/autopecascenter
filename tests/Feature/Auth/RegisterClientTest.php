@@ -68,7 +68,7 @@ class RegisterClientTest extends TestCase
 
         $client = User::query()->where('email', 'maria@example.com')->firstOrFail();
 
-        Mail::assertSent(VerifyEmailMail::class, fn (VerifyEmailMail $mail): bool => $mail->user->is($client));
+        Mail::assertQueued(VerifyEmailMail::class, fn (VerifyEmailMail $mail): bool => $mail->user->is($client));
     }
 
     public function test_rejects_an_invalid_referral_code(): void

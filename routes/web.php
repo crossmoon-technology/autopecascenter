@@ -68,6 +68,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/esqueci-a-senha', [AuthController::class, 'sendResetLink'])->name('password.email');
     Route::get('/redefinir-senha/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/redefinir-senha', [AuthController::class, 'resetPassword'])->name('password.update');
+
+    Route::get('/reenviar-confirmacao', [AuthController::class, 'showResendVerification'])->name('verification.resend.show');
+    Route::post('/reenviar-confirmacao', [AuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
